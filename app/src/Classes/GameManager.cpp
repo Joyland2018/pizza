@@ -686,26 +686,26 @@ void GameManager::replaceToGameScenes(){
 
 //banner
 void GameManager::showBanner() {
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
-    JniMethodInfo minfo;
-    bool isHave = JniHelper::getStaticMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","rtnActivity","()Lcooking/games/kids/pizza/free/JoyPreschool;");
-
-    if (!isHave){
-        CCLOG("jni:不能获取单例");
-    } else{
-        CCLOG("jni:可以获取单例");
-
-        jobject jobj = minfo.env->CallStaticObjectMethod(minfo.classID, minfo.methodID);
-
-        bool isHaveNoStaticMethodInfo = JniHelper::getMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","onShowOrHideBanner","()V");
-        if (!isHaveNoStaticMethodInfo){
-            CCLOG("jni:alertDiaShowt方法不存在");
-        } else{
-            CCLOG("jni:alertDiaShow方法存在");
-            minfo.env->CallVoidMethod(jobj,minfo.methodID);
-        }
-    }
-#endif
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+//    JniMethodInfo minfo;
+//    bool isHave = JniHelper::getStaticMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","rtnActivity","()Lcooking/games/kids/pizza/free/JoyPreschool;");
+//
+//    if (!isHave){
+//        CCLOG("jni:不能获取单例");
+//    } else{
+//        CCLOG("jni:可以获取单例");
+//
+//        jobject jobj = minfo.env->CallStaticObjectMethod(minfo.classID, minfo.methodID);
+//
+//        bool isHaveNoStaticMethodInfo = JniHelper::getMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","onShowOrHideBanner","()V");
+//        if (!isHaveNoStaticMethodInfo){
+//            CCLOG("jni:alertDiaShowt方法不存在");
+//        } else{
+//            CCLOG("jni:alertDiaShow方法存在");
+//            minfo.env->CallVoidMethod(jobj,minfo.methodID);
+//        }
+//    }
+//#endif
 }
 
 void GameManager::noBanner() {
@@ -733,48 +733,48 @@ void GameManager::noBanner() {
 
 //插页广告
 void GameManager::showInterstitial() {
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
-    JniMethodInfo minfo;
-
-    bool isHave = JniHelper::getStaticMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","rtnActivity","()Lcooking/games/kids/pizza/free/JoyPreschool;");
-
-    if (!isHave){
-        CCLOG("jni:不能获取单例");
-    } else{
-        CCLOG("jni:可以获取单例");
-
-        jobject jobj = minfo.env->CallStaticObjectMethod(minfo.classID, minfo.methodID);
-
-        bool isHaveNoStaticMethodInfo = JniHelper::getMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","onShowInterstitial","()V");
-        if (!isHaveNoStaticMethodInfo){
-            CCLOG("jni:alertDiaShowt方法不存在");
-        } else{
-            CCLOG("jni:alertDiaShow方法存在");
-            minfo.env->CallVoidMethod(jobj,minfo.methodID);
-        }
-    }
-#endif
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+//    JniMethodInfo minfo;
+//
+//    bool isHave = JniHelper::getStaticMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","rtnActivity","()Lcooking/games/kids/pizza/free/JoyPreschool;");
+//
+//    if (!isHave){
+//        CCLOG("jni:不能获取单例");
+//    } else{
+//        CCLOG("jni:可以获取单例");
+//
+//        jobject jobj = minfo.env->CallStaticObjectMethod(minfo.classID, minfo.methodID);
+//
+//        bool isHaveNoStaticMethodInfo = JniHelper::getMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","onShowInterstitial","()V");
+//        if (!isHaveNoStaticMethodInfo){
+//            CCLOG("jni:alertDiaShowt方法不存在");
+//        } else{
+//            CCLOG("jni:alertDiaShow方法存在");
+//            minfo.env->CallVoidMethod(jobj,minfo.methodID);
+//        }
+//    }
+//#endif
 }
 //激励视频
 void GameManager::showReward() {
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
-    JniMethodInfo minfo;
-    bool isHave = JniHelper::getStaticMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","rtnActivity","()Lcooking/games/kids/pizza/free/JoyPreschool;");
-    if (!isHave){
-        CCLOG("jni:不能获取单例");
-    } else{
-        CCLOG("jni:可以获取单例");
-        jobject jobject1 = minfo.env->CallStaticObjectMethod(minfo.classID,minfo.methodID);
-        bool isHaveNoStaticMethod = JniHelper::getMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","showRewardAds","()V");
-        if (!isHaveNoStaticMethod){
-            CCLOG("jni:不能获取单例");
-        } else{
-            CCLOG("jni:可以获取单例");
-            minfo.env->CallVoidMethod(jobject1,minfo.methodID);
-        }
-    }
-    CCLOG("jni-java函数执行完毕");
-#endif
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+//    JniMethodInfo minfo;
+//    bool isHave = JniHelper::getStaticMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","rtnActivity","()Lcooking/games/kids/pizza/free/JoyPreschool;");
+//    if (!isHave){
+//        CCLOG("jni:不能获取单例");
+//    } else{
+//        CCLOG("jni:可以获取单例");
+//        jobject jobject1 = minfo.env->CallStaticObjectMethod(minfo.classID,minfo.methodID);
+//        bool isHaveNoStaticMethod = JniHelper::getMethodInfo(minfo,"cooking/games/kids/pizza/free/JoyPreschool","showRewardAds","()V");
+//        if (!isHaveNoStaticMethod){
+//            CCLOG("jni:不能获取单例");
+//        } else{
+//            CCLOG("jni:可以获取单例");
+//            minfo.env->CallVoidMethod(jobject1,minfo.methodID);
+//        }
+//    }
+//    CCLOG("jni-java函数执行完毕");
+//#endif
 }
 
 void GameManager::changeToGameScene() {

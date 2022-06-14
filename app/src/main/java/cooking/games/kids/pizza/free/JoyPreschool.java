@@ -1218,7 +1218,7 @@ public class JoyPreschool extends Cocos2dxActivity implements PurchasesUpdatedLi
     };
 
     public void onShowInterstitial(){
-        handler.post(onShowInterstitialThread);
+//        handler.post(onShowInterstitialThread);
     }
 
 
