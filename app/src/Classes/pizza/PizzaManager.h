@@ -25,11 +25,14 @@ public:
     
     void addPizzaTopping(int index);
     
-    void addTopPos(int index,int indexs);
+    void addTopPos(float index,float indexs);
     //选择的配菜
-    int topping[10];
-    int addTop[100];
-    int addToppingPos[100][100];
+    int topping[10] = {99};
+//    int addTop[100] = {55};
+    CCArray* addTop;
+//    int addToppingPos[100][100]={0};
+    CCArray* addToppingPosX;
+    CCArray* addToppingPosY;
     //pizza口味
     int whichPizza=0;
     
@@ -61,6 +64,7 @@ public:
     
     void cleanAllSprite();
     
+    void cleanTopping();
 };
 
 #endif /* PizzaManager_hpp */

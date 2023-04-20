@@ -96,6 +96,8 @@ public:
     int sauce_x=0;
     bool backClick;
     
+    bool clickNext;
+    
     void clickBack();
     void clickToBack();
     CREATE_FUNC(MakePizza);

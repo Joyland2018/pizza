@@ -32,6 +32,7 @@ enum{
     kNewSprite = 70,
     kMilkPot=80,
     kVegBoardTag = 141,
+    kNextTag = 199,
 };
 
 CCScene* MakeSauce::scene(){
@@ -56,7 +57,32 @@ bool MakeSauce::init(){
     if (!CCLayer::init()) {
         return false;
     }
+    clickNext = false;
     backClick=false;
+    touchOther = true;
+    touchIndex=0;
+    newSpriteIndex=0;
+    rotation=0;
+    originRotation=0;
+    sauceIndex=0;
+    newSpriteTag=0;
+    beginPos=0;
+    endPos=0;
+    milkIndex=0;
+    MaterialIndex=0;
+    whichMaterial=0;
+    cutNum=1;
+    
+    touchedMilk=false;
+    fireOn = false;
+    canStri = false;
+    subStir=false;
+    addStir = false;
+    stirNum = false;
+    touchOther = true;
+    touchSprite= NULL;
+    touchSpoon = NULL;
+    touchMilk=false;
     CCPoint visibleOrigin=CCDirector::sharedDirector()->getVisibleOrigin();
     CCSize visibleSize = CCDirector::sharedDirector()->getVisibleSize();
     center = GameManager::sharedManager()->getCenter();
@@ -80,6 +106,7 @@ bool MakeSauce::init(){
 //    pot->setPosition(ccp(center.x-200, center.y));
 //    pot->setTag(kPot1);
 //    this->addChild(pot);
+    fileName="";
     
     CCSprite* back = CCSprite::create("background/back.png");
     back->setPosition(ccp(leftTop.x+50,leftTop.y-50));
@@ -92,7 +119,7 @@ bool MakeSauce::init(){
     CCSprite* money = CCSprite::create("background/money.png");
     money->setPosition(ccp(visibleOrigin.x+visibleSize.width-100, visibleSize.height-50));
 //    money->setTag(kMoney);
-    this->addChild(money,10);
+//    this->addChild(money,10);
     
     CCString* curscore = CCString::createWithFormat("%d",GameManager::sharedManager()->getCurrentCoin());
     const char* curscores = curscore->getCString();
@@ -100,7 +127,12 @@ bool MakeSauce::init(){
     curallscores->setColor(ccWHITE);
 //    curallscores->setTag(100);
     curallscores->setPosition(ccp(visibleOrigin.x+visibleSize.width-70, visibleSize.height-50));
-    this->addChild(curallscores,11);
+//    this->addChild(curallscores,11);
+    
+    CCSprite* next = CCSprite::create("background/next.png");
+    next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
+    next->setTag(kNextTag);
+    this->addChild(next);
     
     if(GameManager::sharedManager()->firstPlayPizza){
 //        this->schedule(schedule_selector(MakeSauce::showFinger),1.5f);
@@ -116,21 +148,17 @@ bool MakeSauce::init(){
     
     if(GameManager::sharedManager()->firstPizzaSauce){
         this->schedule(schedule_selector(MakeSauce::showFinger),1.5f);
-    }else{
-        canTouchOther();
+//    }else{
+//        canTouchOther();
     }
-    showPot();
+    this->showPot();
     
     CCSprite* vegBoard = CCSprite::create("background/toppings-board.png");
     vegBoard->setPosition(ccp(center.x, leftBottomPos.y+100));
     vegBoard->setScale(1.2);
     vegBoard->setTag(kVegBoardTag);
 //    this->addChild(vegBoard);
-
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
-    }
-
+    
     this->setTouchEnabled(true);
     return true;
 }
@@ -150,16 +178,19 @@ void MakeSauce::potActoion(){
 //    }
     SimpleAudioEngine::sharedEngine()->playEffect("mp3/foodStart.mp3");
     CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
-    CCString *name =CCString::createWithFormat("pot2.png");
-//    CCString *name = CCString::createWithFormat("sauce_%d.png",index+2);
-    CCSpriteFrame* potAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    pot->setDisplayFrame(potAction);
-    fireOn=true;
+    if (pot!=NULL) {
+        CCString *name =CCString::createWithFormat("pot2.png");
+    //    CCString *name = CCString::createWithFormat("sauce_%d.png",index+2);
+        CCSpriteFrame* potAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+        pot->setDisplayFrame(potAction);
+        fireOn=true;
+    }
+
 //    fireOnMp3();
 }
 
 //void MakeSauce::fireOnMp3(){
-//    SimpleAudioEngine::sharedEngine()->playEffect("Chef/mp3/foodStart.mp3");
+//    SimpleAudioEngine::sharedEngine()->playEffect("mp3/foodStart.mp3");
 //}
 
 void MakeSauce::showFinger(){
@@ -184,7 +215,7 @@ void MakeSauce::showFinger(){
                                          CCEaseOut::create(CCMoveTo::create(0.8, ccp(center.x, center.y+80)), 1.0f),
                                                            CCFadeOut::create(0.4),
 //                                                            CCRemoveSelf::create(),
-                                         CCCallFunc::create(this, callfunc_selector(MakeSauce::canTouchOther)),
+//                                         CCCallFunc::create(this, callfunc_selector(MakeSauce::canTouchOther)),
                                          NULL));
     this->addChild(finger,999);
 }
@@ -285,6 +316,7 @@ void MakeSauce::showMilk(){
 void MakeSauce::milkAction(){
     CCSprite* milk = (CCSprite*)this->getChildByTag(kMilk);
     if (milk!=NULL) {
+        touchMilk = false;
                   CCArray* frame = CCArray::create();
                   for (int i =1; i<4; i++) {
                       CCString *name = CCString::createWithFormat("%s%d_%d.png",fileName,milkIndex,i);
@@ -314,11 +346,14 @@ void MakeSauce::potMilk(){
     SimpleAudioEngine::sharedEngine()->playEffect("mp3/water1.mp3");
     CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
 //    CCPoint pos = ccp(pot->getPosition().x, pot->getPosition().y+35);
-    CCSprite* newSprite = CCSprite::create(CCString::createWithFormat("pizza/element/sauce/%s/%s%d.png",fileName,fileName,touchIndex)->getCString());
-    newSprite->setPosition(ccp(pot->getContentSize().width/2, pot->getContentSize().height/1.7));
-    pot->addChild(newSprite,999);
-    newSprite->setTag(kMilkPot);
-    touchMilk = false;
+    if(pot!=NULL && strcmp(fileName, "") != 0){
+        CCSprite* newSprite = CCSprite::create(CCString::createWithFormat("pizza/element/sauce/%s/%s%d.png",fileName,fileName,touchIndex)->getCString());
+        newSprite->setPosition(ccp(pot->getContentSize().width/2, pot->getContentSize().height/1.7));
+        pot->addChild(newSprite,999);
+        newSprite->setTag(kMilkPot);
+//        touchMilk = false;
+    }
+
 }
 
 void MakeSauce::canTouchOther(){
@@ -329,47 +364,53 @@ void MakeSauce::canTouchOther(){
 void MakeSauce::showSpoon(){
     
     CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
-    CCSprite* spoon =CCSprite::create("pizza/element/spoon.png");
-    CCPoint pos = pot->getPosition();
-    spoon->setRotation(90);
-    spoon->setScale(0.6);
-    spoon->setPosition(ccp(pot->getContentSize().width/1.3,pos.y+800));
-    CCFiniteTimeAction *action1=CCSpawn::create(CCRemoveSelf::create(),
-                                                CCCallFunc::create(this, callfunc_selector(MakeSauce::showSpoon1)),
-                                                NULL);
-    
-    spoon->runAction(CCSequence::create(CCEaseOut::create(CCMoveTo::create(1.5, ccp(pot->getContentSize().width/1.1, pot->getContentSize().height/1.7)), 1.0),
-                                        action1,
-                                        NULL));
-    pot->addChild(spoon);
+    if (pot!=NULL) {
+        CCSprite* spoon =CCSprite::create("pizza/element/spoon.png");
+        CCPoint pos = pot->getPosition();
+        spoon->setRotation(90);
+        spoon->setScale(0.6);
+        spoon->setPosition(ccp(pot->getContentSize().width/1.3,pos.y+800));
+        CCFiniteTimeAction *action1=CCSpawn::create(CCRemoveSelf::create(),
+                                                    CCCallFunc::create(this, callfunc_selector(MakeSauce::showSpoon1)),
+                                                    NULL);
+        
+        spoon->runAction(CCSequence::create(CCEaseOut::create(CCMoveTo::create(1.5, ccp(pot->getContentSize().width/1.1, pot->getContentSize().height/1.7)), 1.0),
+                                            action1,
+                                            NULL));
+        pot->addChild(spoon);
+    }
+
 //    spoon->setRotation(20);
 }
 
 void MakeSauce::showSpoon1(){
 //    rotation = 20;
     CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
-    CCSprite* spoon =CCSprite::create("pizza/element/spoon1.png");
-    CCPoint pos = pot->getPosition();
-    spoon->setPosition(ccp(pot->getContentSize().width/1.1, pot->getContentSize().height/1.7));
-    spoon->setTag(kSpoon);
-    spoon->setScale(0.6);
-    pot->addChild(spoon);
-    pot->setAnchorPoint(ccp(0.5,0.5));
-    spoon->setRotation(90);
-    originRotation =90;
-    CCActionInterval *forwardBy = CCJumpBy::create(0.4, ccp(0,0), 10, 1);
-    CCActionInterval *backBy = forwardBy->reverse();
-    
-    CCFiniteTimeAction *action = CCSpawn::create(CCCallFunc::create(this, callfunc_selector(MakeSauce::removeNewsprite)),
-                                                 CCCallFunc::create(this, callfunc_selector(MakeSauce::showSauce)),
-                                                 NULL);
-    
-    spoon->runAction(CCSequence::create(
-                                        forwardBy,
-                                        backBy,
-                                        action,
-                                        CCCallFunc::create(this, callfunc_selector(MakeSauce::canTouchedSpoon)),
-                                        NULL));
+    if (pot!=NULL) {
+        CCSprite* spoon =CCSprite::create("pizza/element/spoon1.png");
+        CCPoint pos = pot->getPosition();
+        spoon->setPosition(ccp(pot->getContentSize().width/1.1, pot->getContentSize().height/1.7));
+        spoon->setTag(kSpoon);
+        spoon->setScale(0.6);
+        pot->addChild(spoon);
+        pot->setAnchorPoint(ccp(0.5,0.5));
+        spoon->setRotation(90);
+        originRotation =90;
+        CCActionInterval *forwardBy = CCJumpBy::create(0.4, ccp(0,0), 10, 1);
+        CCActionInterval *backBy = forwardBy->reverse();
+        
+        CCFiniteTimeAction *action = CCSpawn::create(CCCallFunc::create(this, callfunc_selector(MakeSauce::removeNewsprite)),
+                                                     CCCallFunc::create(this, callfunc_selector(MakeSauce::showSauce)),
+                                                     NULL);
+        
+        spoon->runAction(CCSequence::create(
+                                            forwardBy,
+                                            backBy,
+                                            action,
+                                            CCCallFunc::create(this, callfunc_selector(MakeSauce::canTouchedSpoon)),
+                                            NULL));
+    }
+
 //    canTouchSpoon = true;
 }
 
@@ -379,17 +420,20 @@ void MakeSauce::canTouchedSpoon(){
 
 void MakeSauce::removeNewsprite(){
     CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
-    for (int i=0; i<newSpriteIndex; i++) {
-        CCSprite* newSprite = (CCSprite*)pot->getChildByTag(kNewSprite+i);
-        if (newSprite != NULL) {
-            newSprite->removeFromParentAndCleanup(true);
+    if (pot!=NULL) {
+        for (int i=0; i<newSpriteIndex; i++) {
+            CCSprite* newSprite = (CCSprite*)pot->getChildByTag(kNewSprite+i);
+            if (newSprite != NULL) {
+                newSprite->removeFromParentAndCleanup(true);
+            }
+            
         }
-        
+        CCSprite* milk = (CCSprite*)pot->getChildByTag(kMilkPot);
+        if (milk) {
+            milk->removeFromParentAndCleanup(true);
+        }
     }
-    CCSprite* milk = (CCSprite*)pot->getChildByTag(kMilkPot);
-    if (milk) {
-        milk->removeFromParentAndCleanup(true);
-    }
+
    
 //    this->removeChildByTag(kMilk);
 }
@@ -402,10 +446,13 @@ void MakeSauce::showSauce(){
         CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile(CCString::createWithFormat("pizza/animate/%s/sauce_%s.plist",fileName,fileName)->getCString());
         
         CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
-        CCSprite* sauce = CCSprite::createWithSpriteFrameName(CCString::createWithFormat("sauce%s_1.png",fileName)->getCString());
-        sauce->setTag(kSauce);
-        sauce->setPosition(ccp(pot->getContentSize().width/2, pot->getContentSize().height/2));
-        pot->addChild(sauce,2);
+        if (pot!=NULL) {
+            CCSprite* sauce = CCSprite::createWithSpriteFrameName(CCString::createWithFormat("sauce%s_1.png",fileName)->getCString());
+            sauce->setTag(kSauce);
+            sauce->setPosition(ccp(pot->getContentSize().width/2, pot->getContentSize().height/2));
+            pot->addChild(sauce,2);
+        }
+
     }
     
 }
@@ -415,14 +462,19 @@ void MakeSauce::sauceAction(int index){
         index =4;
     }
     CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
-    CCSprite* sauce = (CCSprite*)pot->getChildByTag(kSauce);
-    CCString *name =CCString::createWithFormat("sauce%s_%d.png",fileName,index+2);
-//    CCString *name = CCString::createWithFormat("sauce_%d.png",index+2);
-    CCSpriteFrame* sauceAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    sauce->setDisplayFrame(sauceAction);
-    if (sauceIndex%2==0) {
-        stirMp3();
+    if (pot!=NULL) {
+        CCSprite* sauce = (CCSprite*)pot->getChildByTag(kSauce);
+        if (sauce!=NULL) {
+            CCString *name =CCString::createWithFormat("sauce%s_%d.png",fileName,index+2);
+        //    CCString *name = CCString::createWithFormat("sauce_%d.png",index+2);
+            CCSpriteFrame* sauceAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+            sauce->setDisplayFrame(sauceAction);
+            if (sauceIndex%2==0) {
+                stirMp3();
+            }
+        }
     }
+
 }
 
 void MakeSauce::clickBack(){
@@ -432,82 +484,97 @@ void MakeSauce::clickBack(){
 void MakeSauce::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());
     CCPoint location=CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
-    if (touchOther) {
+//    if (touchOther) {
         this->unschedule(schedule_selector(MakeSauce::showFinger));
-        if (whichMaterial==2) {
-            for (int i=0; i<4; i++) {
-                CCSprite* candy = (CCSprite*)this->getChildByTag(kCandy+i);
-                if (candy && candy->boundingBox().containsPoint(location)) {
-                    touchSprite = candy;
-                    touchIndex=i+1;
-                    originPos = touchSprite->getPosition();
-                }
-            }
-        }else if (whichMaterial==3) {
-            for (int i=0; i<2; i++) {
-                CCSprite* halloween = (CCSprite*)this->getChildByTag(kHalloweenn+i);
-                if (halloween && halloween->boundingBox().containsPoint(location)) {
-                    touchSprite = halloween;
-                    touchIndex=i+1;
-                    originPos = touchSprite->getPosition();
-                }
-            }
-        }else if (whichMaterial==4) {
-            for (int i=0; i<4; i++) {
-                CCSprite* christmas = (CCSprite*)this->getChildByTag(kChristmas+i);
-                if (christmas && christmas->boundingBox().containsPoint(location)) {
-                    touchSprite = christmas;
-                    touchIndex=i+1;
-                    originPos = touchSprite->getPosition();
-                }
-            }
-        }
-    }
-    
     CCSprite* milk = (CCSprite*)this->getChildByTag(kMilk);
-    if (milk && milk->boundingBox().containsPoint(location) && !touchedMilk) {
-        touchedMilk=true;
-        touchOther = false;
-        touchSprite = milk;
-        touchMilk = true;
-        touchIndex=44;
-        originPos = touchSprite->getPosition();
-        SimpleAudioEngine::sharedEngine()->playEffect("mp3/pin.mp3");
-    }
-    
-    if (canTouchSpoon) {
+    if (pTouches->count() == 1) {                       
+        if (milk && milk->boundingBox().containsPoint(location) && !touchedMilk) {
+            touchedMilk=true;
+            touchOther = false;
+            touchSprite = milk;
+            touchMilk = true;
+            touchIndex=44;
+            originPos = touchSprite->getPosition();
+            SimpleAudioEngine::sharedEngine()->playEffect("mp3/pin.mp3");
+        }
+        if (touchOther == true) {
+            if (whichMaterial==2) {
+                for (int i=0; i<4; i++) {
+                    CCSprite* candy = (CCSprite*)this->getChildByTag(kCandy+i);
+                    if (candy && candy->boundingBox().containsPoint(location)) {
+                        touchSprite = candy;
+                        touchIndex=i+1;
+                        originPos = touchSprite->getPosition();
+                    }
+                }
+            }else if (whichMaterial==3) {
+                for (int i=0; i<2; i++) {
+                    CCSprite* halloween = (CCSprite*)this->getChildByTag(kHalloweenn+i);
+                    if (halloween && halloween->boundingBox().containsPoint(location)) {
+                        touchSprite = halloween;
+                        touchIndex=i+1;
+                        originPos = touchSprite->getPosition();
+                    }
+                }
+            }else if (whichMaterial==4) {
+                for (int i=0; i<4; i++) {
+                    CCSprite* christmas = (CCSprite*)this->getChildByTag(kChristmas+i);
+                    if (christmas && christmas->boundingBox().containsPoint(location)) {
+                        touchSprite = christmas;
+                        touchIndex=i+1;
+                        originPos = touchSprite->getPosition();
+                    }
+                }
+            }
+        }
+
+    //    }
         
-        CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
-        CCSprite* spoon = (CCSprite*)pot->getChildByTag(kSpoon);
-        CCPoint pos = pot->convertToNodeSpace(location);
-        if (spoon && spoon->boundingBox().containsPoint(pos)) {
-            touchSpoon = spoon;
-            beginPos = location.x;
+
+        
+        if (canTouchSpoon) {
+            
+            CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
+            if (pot!=NULL) {
+                CCSprite* spoon = (CCSprite*)pot->getChildByTag(kSpoon);
+                CCPoint pos = pot->convertToNodeSpace(location);
+                if (spoon && spoon->boundingBox().containsPoint(pos)) {
+                    touchSpoon = spoon;
+                    beginPos = location.x;
+                }
+            }
+        }
+        
+        
+        
+        CCSprite* back = (CCSprite*)this->getChildByTag(kBack);
+        CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
+        if (back!=NULL && back->boundingBox().containsPoint(location) && backClick==false) {
+            backClick = true;
+            fileName = "";
+            touchSprite = NULL;
+            touchSpoon = NULL;
+            touchMilk = false;
+            SimpleAudioEngine::sharedEngine()->stopAllEffects();
+    //        SimpleAudioEngine::sharedEngine()->playEffect("mp3/done.mp3");
+    //        if (PizzaManager::sharedManager()->whichPizza != 8) {
+    //            CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, MakePizza::scene(), ccBLACK));
+    //        }else{
+            CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+            //            homeBtn->setScale(1.2);
+            //            touchSprite = homeBtn;
+            SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+            back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(MakeSauce::clickBack))));
+    //        }
+    //        PizzaManager::sharedManager()->cleanAllSprite();
+        }else if (next !=NULL && next->boundingBox().containsPoint(location) && clickNext==false) {
+            clickNext = true;
+            CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+            SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+            next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(MakeSauce::goNext))));
         }
     }
-    
-    
-    
-    CCSprite* back = (CCSprite*)this->getChildByTag(kBack);
-    if (back!=NULL && back->boundingBox().containsPoint(location) && backClick==false) {
-        backClick = true;
-        fileName = "";
-        touchSprite = NULL;
-        touchSpoon = NULL;
-        touchMilk = NULL;
-        SimpleAudioEngine::sharedEngine()->stopAllEffects();
-//        SimpleAudioEngine::sharedEngine()->playEffect("mp3/done.mp3");
-//        if (PizzaManager::sharedManager()->whichPizza != 8) {
-//            CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, MakePizza::scene(), ccBLACK));
-//        }else{
-        CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
-        //            homeBtn->setScale(1.2);
-        //            touchSprite = homeBtn;
-        SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
-        back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(MakeSauce::clickBack))));
-//        }
-//        PizzaManager::sharedManager()->cleanAllSprite();
-    }
+
 }
 
 
@@ -526,13 +593,14 @@ void MakeSauce::stirMp3(){
 void MakeSauce::ccTouchesMoved(CCSet *pTouches, CCEvent *pEvent){
     CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
+    
     if (touchSprite && !canTouchSpoon) {
         touchSprite->setPosition(location);
     }else if(touchSpoon && canTouchSpoon){
         CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
         CCPoint pos = pot->convertToNodeSpace(location);
         if (rotation<=110  && rotation!=70 && rotation>70 && !subStir) {
-                rotation--;
+            rotation = rotation-2;
 //                    }
         }else if(rotation<=70){
             subStir=true;
@@ -540,7 +608,7 @@ void MakeSauce::ccTouchesMoved(CCSet *pTouches, CCEvent *pEvent){
             rotation=70;
         }
         if (rotation>=70 && rotation!=110 && rotation<110 &&  addStir) {
-                rotation++;
+            rotation = rotation+2;
 //                    }
         }else if(rotation>=110){
             addStir=false;
@@ -601,7 +669,7 @@ void MakeSauce::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
     CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
     CCSprite* pot = (CCSprite*)this->getChildByTag(kPot);
-    if (touchSprite) {
+    if (touchSprite !=NULL) {
         float rectWidth = 55;
         float rectHeight = 55;
         float rectWidth1 = touchSprite->getContentSize().width;
@@ -611,9 +679,11 @@ void MakeSauce::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
         CCRect rect2 = this->createRectByPoint(touchSprite->getPosition(), rectWidth1, rectHeight1);
         if (rect1.intersectsRect(rect2)) {
             
-            if (touchMilk) {
+            if (touchMilk==true) {
                 touchSprite->runAction(CCCallFunc::create(this, callfunc_selector(MakeSauce::milkAction)));
-            }else{
+            }
+            
+            if(touchOther == true){
                 SimpleAudioEngine::sharedEngine()->playEffect("mp3/pinIn.mp3");
                 touchSprite->removeFromParentAndCleanup(true);
                 CCSprite* newSprite = CCSprite::create(CCString::createWithFormat("pizza/element/sauce/%s/%s%d.png",fileName,fileName,touchIndex)->getCString());
@@ -621,7 +691,7 @@ void MakeSauce::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
                 newSpriteTag++;
                 newSprite->setPosition(ccp(pot->getContentSize().width/2, pot->getContentSize().height/1.7));
                 pot->addChild(newSprite,5+touchIndex);
-                if (!fireOn) {
+                if (fireOn == false) {
 //                    this->potActoion();
                     this->scheduleOnce(schedule_selector(MakeSauce::potActoion), 0.1);
                 }
@@ -646,10 +716,10 @@ void MakeSauce::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
 //                newSpriteTag=0;
             }
         }else{
-            canTouchOther();
+            touchOther = true;
             touchedMilk=false;
             touchMilk = false;
-            SimpleAudioEngine::sharedEngine()->playEffect("mp3/movein.mp3");
+            SimpleAudioEngine::sharedEngine()->playEffect("mp3/movein.wav");
             touchSprite->runAction(CCMoveTo::create(0.5, originPos));
         }
         touchSprite = NULL;

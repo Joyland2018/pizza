@@ -20,6 +20,7 @@ enum{
     kPizzaShape=1,
     kDino = 2,
     kMoney = 3,
+    kNextTag = 9,
 };
 
 CCScene* CutPizza::scene(){
@@ -47,12 +48,23 @@ bool CutPizza::init(){
         return false;
     }
     
+    x_x=0;
+    x_y=0;
+    rect_x=0;
+    yuan_x=0;
+    heart_x=0;
+    topXdis=0;
+    clickNext = false;
+    pizzaTop=NULL;
+    board=NULL;
     backClick = false;
     visibleOrigin = CCDirector::sharedDirector()->getVisibleOrigin();
     visibleSize = CCDirector::sharedDirector()->getVisibleSize();
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/eatpizza.plist");
     center = GameManager::sharedManager()->getCenter();
     CCPoint leftTop = GameManager::sharedManager()->getLeftTopPos();
+    
+    CCPoint rightTop = GameManager::sharedManager()->getRightTopPos();
     //背景
     CCSprite* bg = CCSprite::create("background/bg2.png");
     bg->setPosition(center);
@@ -61,10 +73,12 @@ bool CutPizza::init(){
     if (GameManager::sharedManager()->isIphoneX()) {
         bg->setScale(1.3);
         x_x=-100;
-    }else if (GameManager::sharedManager()->isAndroidPad()){
-        x_x=52;
+//        x_y=300;
     }
-//    else if(DeviceManager::sharedManager()->getIsPad()){
+    else if(GameManager::sharedManager()->isAndroidPad()){
+        x_x=55;
+    }
+//    else if(GameManager::sharedManager()->getIsPad()){
 //        x_x=0;
 ////        x_y=300;
 //    }
@@ -74,6 +88,7 @@ bool CutPizza::init(){
     back->setPosition(ccp(leftTop.x+50,leftTop.y-50));
     back->setTag(kBack);
     this->addChild(back,1111);
+    
     CCSprite* money = CCSprite::create("background/money.png");
     money->setPosition(ccp(visibleOrigin.x+visibleSize.width-100, visibleSize.height-50));
     money->setTag(kMoney);
@@ -86,12 +101,13 @@ bool CutPizza::init(){
     curallscores->setTag(100);
     curallscores->setPosition(ccp(visibleOrigin.x+visibleSize.width-70, visibleSize.height-50));
     this->addChild(curallscores,11);
-
-
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
-    }
-
+    
+    
+    CCSprite* next = CCSprite::create("background/next.png");
+    next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
+    next->setTag(kNextTag);
+//    this->addChild(next);
+    
     this->scheduleOnce(schedule_selector(CutPizza::showPizza), 1.0);
 //    this->showPizza();
     this->setTouchEnabled(true);
@@ -145,13 +161,15 @@ void CutPizza::dinoEatAction(){
 }
 
 void CutPizza::showPizza(){
-    
-    board = CCSprite::create("background/plate.png");
-    board->setPosition(ccp(center.x, center.y-500));
-    board->setScale(0.78);
-    this->addChild(board);
+    if (board==NULL) {
+        board = CCSprite::create("background/plate.png");
+        board->setPosition(ccp(center.x, center.y-500));
+        board->setScale(0.78);
+        this->addChild(board);
+    }
 //    PizzaManager::sharedManager()->whichShape = 3;
     CCLOG("---%d---",PizzaManager::sharedManager()->whichShape);
+    CCLOG("---%d---",PizzaManager::sharedManager()->whichPizza);
     CCSprite* pizzaShape = CCSprite::create();
     const char* file = "";
     if (PizzaManager::sharedManager()->whichPizza!=1) {
@@ -163,7 +181,7 @@ void CutPizza::showPizza(){
             }else if (PizzaManager::sharedManager()->whichPizza==6) {
                 file ="heartchristmas";
             }else{
-                file ="heartbakecheese";
+                file ="heartbakecheeses";
             }
             pizzaShape = CCSprite::create(CCString::createWithFormat("pizza/element/bake/%s.png",file)->getCString());
 //            pizzaShape = CCSprite::create("pizza/element/heartbakecheese.png");
@@ -177,7 +195,7 @@ void CutPizza::showPizza(){
             }else if (PizzaManager::sharedManager()->whichPizza==6) {
                 file ="equalchristmas";
             }else{
-                file ="bakeCheese";
+                file ="bakeCheeses";
             }
             pizzaShape = CCSprite::create(CCString::createWithFormat("pizza/element/bake/%s.png",file)->getCString());
 //            pizzaShape = CCSprite::create("pizza/element/bakeCheese.png");
@@ -192,7 +210,7 @@ void CutPizza::showPizza(){
             }else if (PizzaManager::sharedManager()->whichPizza==6) {
                 file ="rectchristmas";
             }else{
-                file ="rectcheese";
+                file ="rectcheeses";
             }
             pizzaShape = CCSprite::create(CCString::createWithFormat("pizza/element/bake/%s.png",file)->getCString());
 //            pizzaShape = CCSprite::create("pizza/element/rectcheese.png");
@@ -202,21 +220,23 @@ void CutPizza::showPizza(){
         
     }else if (PizzaManager::sharedManager()->whichPizza==1) {
         if (PizzaManager::sharedManager()->whichShape==1) {
-            pizzaShape = CCSprite::create("pizza/element/bake/heartbakecheeses.png");
+            pizzaShape = CCSprite::create("pizza/element/bake/heartbakecheese.png");
             pizzaShape->setScale(2.8);
         }else if(PizzaManager::sharedManager()->whichShape==3){
-            pizzaShape = CCSprite::create("pizza/element/bake/bakeCheeses.png");
+            pizzaShape = CCSprite::create("pizza/element/bake/bakeCheese.png");
             pizzaShape->setScale(2.5);
         }else if(PizzaManager::sharedManager()->whichShape==2){
             rect_x = 50;
-            pizzaShape = CCSprite::create("pizza/element/bake/rectcheeses.png");
+            pizzaShape = CCSprite::create("pizza/element/bake/rectcheese.png");
             pizzaShape->setScale(2.5);
         }
     }
+
     pizzaShape->setPosition(ccp(center.x-pizzaShape->getContentSize().width*1.28+x_x, center.y+pizzaShape->getContentSize().height*1.15));
 //    pizzaShape->setScale(2.5);
     pizzaShape->setTag(kPizzaShape);
     board->addChild(pizzaShape);
+//      
 //    board->runAction(CCEaseIn::create(CCMoveTo::create(0.3, ccp(center.x, center.y-100)), 0.2));
     if (PizzaManager::sharedManager()->whichPizza!=1 && PizzaManager::sharedManager()->whichPizza!=3) {
         CCFiniteTimeAction *action1=CCSpawn::create(CCEaseIn::create(CCMoveTo::create(0.3, ccp(center.x, center.y-100)), 0.2),
@@ -237,16 +257,21 @@ void CutPizza::showTopping(){
     if (pizzaTop !=NULL) {
         pizzaTop = NULL;
     }
-    int topPosArrLen = sizeof(PizzaManager::sharedManager()->addToppingPos)/sizeof(PizzaManager::sharedManager()->addToppingPos[0]);
-    if (board!=NULL) {
+//    int topPosArrLen = sizeof(PizzaManager::sharedManager()->addToppingPos)/sizeof(PizzaManager::sharedManager()->addToppingPos[0]);
+    int topPosArrLen = PizzaManager::sharedManager()->addToppingPosX->count();
+    CCLOG("---加了多少topping%d---",PizzaManager::sharedManager()->selectedTop);
+    if (board!=NULL &&  pizzaTop == NULL) {
         //    CCLOG("---%d---",PizzaManager::sharedManager()->selectedTop);
             if (PizzaManager::sharedManager()->whichPizza==0) {
                 if (PizzaManager::sharedManager()->selectedTop>0) {
                     for (int i = 0; i<PizzaManager::sharedManager()->selectedTop; i++) {
                         pizzaTop = CCSprite::create("pizza/element/topping_9.png");
             //            pizzaTop->setPosition(ccp(PizzaManager::sharedManager()->addToppingPos[i][0], PizzaManager::sharedManager()->addToppingPos[i][1]-400));
+                        
                         if (i<topPosArrLen) {
-                            pizzaTop->setPosition(ccp(PizzaManager::sharedManager()->addToppingPos[i][0]+topXdis, PizzaManager::sharedManager()->addToppingPos[i][1]+287+rect_x));
+                            float posX= static_cast<CCFloat*>(PizzaManager::sharedManager()->addToppingPosX->objectAtIndex(i))->getValue();
+                            float posY= static_cast<CCFloat*>(PizzaManager::sharedManager()->addToppingPosY->objectAtIndex(i))->getValue();
+                            pizzaTop->setPosition(ccp(posX+topXdis, posY+287+rect_x));
                         }
 
             //            pizzaTop->runAction(CCMoveTo::create(0.3, ccp(PizzaManager::sharedManager()->addToppingPos[i][0], PizzaManager::sharedManager()->addToppingPos[i][1]-100)));
@@ -260,7 +285,9 @@ void CutPizza::showTopping(){
                         pizzaTop = CCSprite::create("pizza/element/topping_5.png");
             //            pizzaTop->setPosition(ccp(PizzaManager::sharedManager()->addToppingPos[i][0], PizzaManager::sharedManager()->addToppingPos[i][1]-400));
                         if (i<topPosArrLen) {
-                            pizzaTop->setPosition(ccp(PizzaManager::sharedManager()->addToppingPos[i][0]+topXdis, PizzaManager::sharedManager()->addToppingPos[i][1]+287+rect_x));
+                            float posX= static_cast<CCFloat*>(PizzaManager::sharedManager()->addToppingPosX->objectAtIndex(i))->getValue();
+                            float posY= static_cast<CCFloat*>(PizzaManager::sharedManager()->addToppingPosY->objectAtIndex(i))->getValue();
+                            pizzaTop->setPosition(ccp(posX+topXdis, posY+287+rect_x));
                         }
 
             //            pizzaTop->runAction(CCMoveTo::create(0.3, ccp(PizzaManager::sharedManager()->addToppingPos[i][0], PizzaManager::sharedManager()->addToppingPos[i][1]-100)));
@@ -272,14 +299,17 @@ void CutPizza::showTopping(){
                 if (PizzaManager::sharedManager()->selectedTop>0) {
                     for (int i = 0; i<PizzaManager::sharedManager()->selectedTop; i++) {
                         char nmName[100] = {0};
-                        sprintf(nmName, "pizza/element/topping_%d.png",PizzaManager::sharedManager()->addTop[i]);     //随机加载数字
+                        int topIndex = static_cast<CCInteger*>(PizzaManager::sharedManager()->addTop->objectAtIndex(i))->getValue();
+                        sprintf(nmName, "pizza/element/topping_%d.png",topIndex);     //随机加载数字
 //                        for (int i =0; i<PizzaManager::sharedManager()->selectedTop; i++) {
 //                            CCLog("----%d----",PizzaManager::sharedManager()->addTop[i]);
 //                        }
 //                        CCLog("----%s----",nmName);                 //
                         pizzaTop = CCSprite::create(nmName);
                         if (i<topPosArrLen) {
-                            pizzaTop->setPosition(ccp(PizzaManager::sharedManager()->addToppingPos[i][0]+topXdis, PizzaManager::sharedManager()->addToppingPos[i][1]+287+rect_x));
+                            float posX= static_cast<CCFloat*>(PizzaManager::sharedManager()->addToppingPosX->objectAtIndex(i))->getValue();
+                            float posY= static_cast<CCFloat*>(PizzaManager::sharedManager()->addToppingPosY->objectAtIndex(i))->getValue();
+                            pizzaTop->setPosition(ccp(posX+topXdis, posY+287+rect_x));
                         }
 
             //            pizzaTop->setPosition(ccp(center.x-PizzaM anager::sharedManager()->addToppingPos[i][0]+x_x+x_y, center.y+PizzaManager::sharedManager()->addToppingPos[i][1]-x_y*0.5));
@@ -304,14 +334,17 @@ void CutPizza::showTopping(){
                 if (PizzaManager::sharedManager()->selectedTop>0) {
                     for (int i = 0; i<PizzaManager::sharedManager()->selectedTop; i++) {
                         char nmName[100] = {0};
-                        sprintf(nmName, "pizza/element/topping/%s/%s_top%d.png",file,file,PizzaManager::sharedManager()->addTop[i]);     //随机加载数字
+                        int topIndex = static_cast<CCInteger*>(PizzaManager::sharedManager()->addTop->objectAtIndex(i))->getValue();
+                        sprintf(nmName, "pizza/element/topping/%s/%s_top%d.png",file,file,topIndex);     //随机加载数字
 //                        for (int i =0; i<PizzaManager::sharedManager()->selectedTop; i++) {
 //                            CCLog("----%d----",PizzaManager::sharedManager()->addTop[i]);
 //                        }
 //                        CCLog("----%s----",nmName);                 //
                         pizzaTop = CCSprite::create(nmName);
                         if (i<topPosArrLen) {
-                            pizzaTop->setPosition(ccp(PizzaManager::sharedManager()->addToppingPos[i][0]+topXdis, PizzaManager::sharedManager()->addToppingPos[i][1]+287+rect_x));
+                            float posX= static_cast<CCFloat*>(PizzaManager::sharedManager()->addToppingPosX->objectAtIndex(i))->getValue();
+                            float posY= static_cast<CCFloat*>(PizzaManager::sharedManager()->addToppingPosY->objectAtIndex(i))->getValue();
+                            pizzaTop->setPosition(ccp(posX+topXdis, posY+287+rect_x));
                         }
  
             //            pizzaTop->setPosition(ccp(center.x-PizzaM anager::sharedManager()->addToppingPos[i][0]+x_x+x_y, center.y+PizzaManager::sharedManager()->addToppingPos[i][1]-x_y*0.5));
@@ -474,10 +507,6 @@ void CutPizza::showFlower(){
     this->addChild(flower2, 100);
     this->addChild(flower3, 100);
     this->addChild(flower4, 100);
-
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showInterstitial();
-    }
     
     SimpleAudioEngine::sharedEngine()->playEffect("mp3/kidsCheering.mp3");
 //    PizzaManager::sharedManager()->cleanAllSprite();
@@ -495,63 +524,63 @@ void CutPizza::eatFinish(){
     CCLog("UpdateTarget------GameWin");
 //    SimpleAudioEngine::sharedEngine()->playEffect("mp3/yeah.mp3");
     CCPoint rightTopPos = GameManager::sharedManager()->getRightTopPos();
-
+    
     auto layer = CCLayerColor::create(ccc4(50, 50, 50, 100));
        // 锚点默认是左下角
     layer->setPosition(0,0);
     layer->setTag(5555);
     this->addChild(layer, 999);
-
+    
     CCLabelTTF* earnCoinLabel1 = CCLabelTTF::create("Congratulation", "Helvetica-Bold",80);
     earnCoinLabel1->CCNode::setPosition(layer->getContentSize().width/2,layer->getContentSize().height/2+150);
     earnCoinLabel1->setColor(ccc3(255, 255, 255));
     layer->addChild(earnCoinLabel1);
-
+    
 //    layer->addChild(you_earn);
     CCLabelTTF* earnCoinLabel = CCLabelTTF::create("You Earned: ", "Helvetica-Bold", 50);
     earnCoinLabel->CCNode::setPosition(layer->getContentSize().width/2-120,layer->getContentSize().height/2);
     earnCoinLabel->setColor(ccc3(255, 255, 255));
     layer->addChild(earnCoinLabel);
-
+    
     GameManager::sharedManager()->setEarnCoinCount(20);
     GameManager::sharedManager()->saveCurrentCoin();
-
+        
     CCSprite* coinSpr = CCSprite::create("background/coin.png");
     coinSpr->setPosition(ccp(layer->getContentSize().width/2+80,layer->getContentSize().height/2));
 //    coinSpr->setScale(2);
     layer->addChild(coinSpr);
-
-    CCLabelTTF*  Score = CCLabelTTF::create(CCString::createWithFormat(" + %d", 20)->getCString(),"Helvetica-Bold", 50);
+    
+    CCLabelTTF*  Score = CCLabelTTF::create(CCString::createWithFormat(" + %d", 20 )->getCString(),"Helvetica-Bold", 50);
     Score->setPosition(ccp(coinSpr->getPosition().x+coinSpr->getContentSize().width+30, coinSpr->getPosition().y));
 //    Score->setPosition(ccp(center.x,center.y));
     layer->addChild(Score);
-
+    
     CCSprite* coinBg = (CCSprite*)this->getChildByTag(kMoney);
-
+    
     if (coinBg != NULL) {
-
+        
         curallscores->setString(CCString::createWithFormat("%d",GameManager::sharedManager()->getCurrentCoin())->getCString());
-
+        
         CCPoint flyTargetPos = layer->convertToNodeSpace(ccp(coinBg->getPosition().x-40, coinBg->getPosition().y));
-
+        
         for (int i = 0; i < 4; i++) {
             CCSprite* flyCoin = CCSprite::create("background/coin.png");
             flyCoin->setPosition(ccp(earnCoinLabel->getPosition().x+earnCoinLabel->getContentSize().width/2+flyCoin->getContentSize().width*0.7-10, earnCoinLabel->getPosition().y));
             flyCoin->setScale(0.7);
             layer->addChild(flyCoin);
-
+            
             flyCoin->runAction(CCSequence::create(CCDelayTime::create(0.1+0.1*i),CCEaseIn::create(CCMoveTo::create(1.0, ccp(flyTargetPos.x, flyTargetPos.y)), 0.5),CCCallFunc::create(this, callfunc_selector(CutPizza::collectCoinMusic)),CCCallFuncN::create(this, callfuncN_selector(CutPizza::removeNormalSprite)),NULL));
         }
-
+        
         CCLabelTTF* plusScore = CCLabelTTF::create(CCString::createWithFormat("+%d",20)->getCString(), "Arial", 30);
         plusScore->setColor(ccc3(200, 200, 200));
         plusScore->setAnchorPoint(ccp(1.0, 0.5));
         plusScore->setPosition(ccp(rightTopPos.x-50, coinBg->getPosition().y-50));
         this->addChild(plusScore,1001);
-
+        
         plusScore->runAction(CCSequence::create(CCEaseIn::create(CCMoveBy::create(1.5, ccp(0, 30)), 0.5),CCCallFuncN::create(this, callfuncN_selector(CutPizza::removeNormalSprite)),NULL));
     }
-
+    
     CCSprite* lightBg = CCSprite::create("background/light.png");
     lightBg->setPosition(ccp(coinSpr->getContentSize().width/2, coinSpr->getContentSize().height/2));
 //    coinSpr->addChild(lightBg,-1);
@@ -559,25 +588,17 @@ void CutPizza::eatFinish(){
     const char* btnPathStr = "background/refresh.png";
     auto item1= CCMenuItemImage::create(btnPathStr, btnPathStr, this,menu_selector(CutPizza::gameComplate));
     auto menu = CCMenu::create(item1, NULL);
-
+        
     menu->setPosition(ccp(layer->getContentSize().width / 2, layer->getContentSize().height / 2-150));
-
+        
     layer->addChild(menu);
-
+    
 //    this->setTouchEnabled(false);
     PizzaManager::sharedManager()->noughComplate=false;
 }
 
 
 void CutPizza::gameComplate(){
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        if (GameManager::sharedManager()->num == 3){
-            GameManager::sharedManager()->showInterstitial();
-            GameManager::sharedManager()->num = 0;
-        }else{
-            GameManager::sharedManager()->num++;
-        }
-    }
     SimpleAudioEngine::sharedEngine()->playEffect("mp3/button_click.mp3");
     CCUserDefault::sharedUserDefault()->setBoolForKey("isHavePlayPizza", false);
     PizzaManager::sharedManager()->havePlay = false;
@@ -601,6 +622,7 @@ void CutPizza::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
     CCSprite* back = (CCSprite*)this->getChildByTag(kBack);
+    CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
     if (back!=NULL && back->boundingBox().containsPoint(location) && backClick == false) {
         backClick = true;
         CCUserDefault::sharedUserDefault()->setBoolForKey("isHavePlayPizza", false);
@@ -613,7 +635,12 @@ void CutPizza::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
         SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
         back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(CutPizza::clickBack))));
         
-        
+        PizzaManager::sharedManager()->noughComplate=false;
+//    }else if (next !=NULL && next->boundingBox().containsPoint(location)  && clickNext==false) {
+//        clickNext = true;
+//        CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+//        SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+//        next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(CutPizza::gameComplate))));
     }
 }
 

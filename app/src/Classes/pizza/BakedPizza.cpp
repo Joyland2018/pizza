@@ -12,6 +12,7 @@
 #include "SimpleAudioEngine.h"
 #include "CutPizza.h"
 #include "MakePizza.h"
+#include "SelectTopping.h"
 
 using namespace CocosDenshion;
 
@@ -27,6 +28,7 @@ enum{
     kBakeMachine = 10,
     kGuard=11,
     kFireTag = 99,
+    kNextTag = 199,
 };
 
 CCScene* BakedPizza::scene(){
@@ -55,11 +57,15 @@ bool BakedPizza::init(){
     }
     
     backClick = false;
+    clickNext = false;
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/pick.plist");
     center = GameManager::sharedManager()->getCenter();
     CCPoint visibleOrigin=CCDirector::sharedDirector()->getVisibleOrigin();
     CCSize visibleSize = CCDirector::sharedDirector()->getVisibleSize();
     CCPoint leftTop = GameManager::sharedManager()->getLeftTopPos();
+    
+    CCPoint rightTop = GameManager::sharedManager()->getRightTopPos();
+    
     //背景
     center = GameManager::sharedManager()->getCenter();
     CCSprite* bg = CCSprite::create("background/bakedbg.png");
@@ -70,9 +76,11 @@ bool BakedPizza::init(){
     
     if (GameManager::sharedManager()->isIphoneX()) {
         bg->setScale(1.3);
-        x_x=80;
-    }else if (GameManager::sharedManager()->isAndroidPad()){
-        x_x=-55;
+        x_x=100;
+    }
+    //xiao
+    else if(GameManager::sharedManager()->isAndroidPad()){
+        x_x=-58;
     }
     
     CCSprite* machine = CCSprite::create("background/bakedmachine.png");
@@ -89,7 +97,7 @@ bool BakedPizza::init(){
     CCSprite* money = CCSprite::create("background/money.png");
     money->setPosition(ccp(visibleOrigin.x+visibleSize.width-100, visibleSize.height-50));
 //    money->setTag(kMoney);
-    this->addChild(money,10);
+//    this->addChild(money,10);
     
     CCString* curscore = CCString::createWithFormat("%d",GameManager::sharedManager()->getCurrentCoin());
     const char* curscores = curscore->getCString();
@@ -97,17 +105,18 @@ bool BakedPizza::init(){
     curallscores->setColor(ccWHITE);
 //    curallscores->setTag(100);
     curallscores->setPosition(ccp(visibleOrigin.x+visibleSize.width-70, visibleSize.height-50));
-    this->addChild(curallscores,11);
+//    this->addChild(curallscores,11);
+    
+    CCSprite* next = CCSprite::create("background/next.png");
+    next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
+    next->setTag(kNextTag);
+    this->addChild(next);
     
 //    this->addChild(table);
     
 //    if(GameManager::sharedManager()->firstPlayPizza){
 //        this->playGuaid();
 //    }
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
-    }
-
     this->scheduleOnce(schedule_selector(BakedPizza::playGuaid), 0.5);
 //    this->showPizza();
     this->fireAction();
@@ -119,27 +128,33 @@ bool BakedPizza::init(){
 void BakedPizza::playGuaid(){
     //手势
     CCSprite* bakeMachine = (CCSprite*)this->getChildByTag(kBakeMachine);
-    CCSprite* finger = CCSprite::createWithSpriteFrameName("touch0.png");
-    finger->setPosition(ccp(bakeMachine->getPosition().x+200, bakeMachine->getPosition().y-180));
-    finger->setTag(kGuard);
-    finger->setScale(0.6);
-    finger->runAction(CCFadeIn::create(0.3));
-    this->addChild(finger,10);
-    this->schedule(schedule_selector(BakedPizza::guardAction),1.0f);
+    if (bakeMachine!=NULL) {
+        CCSprite* finger = CCSprite::createWithSpriteFrameName("touch0.png");
+        finger->setPosition(ccp(bakeMachine->getPosition().x+200, bakeMachine->getPosition().y-180));
+        finger->setTag(kGuard);
+        finger->setScale(0.6);
+        finger->runAction(CCFadeIn::create(0.3));
+        this->addChild(finger,10);
+        this->schedule(schedule_selector(BakedPizza::guardAction),1.0f);
+    }
+
 }
 
 void BakedPizza::guardAction(){
     CCSprite* finger=(CCSprite*)this->getChildByTag(kGuard);
-    CCArray* frame = CCArray::create();
-    for (int m =0; m<2; m++) {
-        CCString *name = CCString::createWithFormat("touch%d.png",m);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (finger!=NULL) {
+        CCArray* frame = CCArray::create();
+        for (int m =0; m<2; m++) {
+            CCString *name = CCString::createWithFormat("touch%d.png",m);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+            CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+            animation->setDelayPerUnit(0.3f);
+            CCAnimate *animate = CCAnimate::create(animation);
+    //    if(!GameManager::sharedManager()->firstPlay){
+            finger->runAction(animate);
     }
-        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-        animation->setDelayPerUnit(0.3f);
-        CCAnimate *animate = CCAnimate::create(animation);
-//    if(!GameManager::sharedManager()->firstPlay){
-        finger->runAction(animate);
+
 //    }
         
 }
@@ -147,23 +162,27 @@ void BakedPizza::guardAction(){
 
 void BakedPizza::fireAction(){
     CCSprite* bakeMachine = (CCSprite*)this->getChildByTag(kBakeMachine);
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/fire.plist");
-    CCSprite* fire = CCSprite::createWithSpriteFrameName("fire1.png");
-    fire->setScale(1.15);
-    fire->setTag(kFireTag);
-    fire->setPosition(ccp(bakeMachine->getPosition().x-x_x, bakeMachine->getPosition().y-70));
-    CCArray* frame = CCArray::create();
-    for (int i =1; i<4; i++) {
-        CCString *name = CCString::createWithFormat("fire%d.png",i);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (bakeMachine!=NULL) {
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/fire.plist");
+        CCSprite* fire = CCSprite::createWithSpriteFrameName("fire1.png");
+        fire->setScale(1.15);
+        fire->setTag(kFireTag);
+        //xiao
+        fire->setPosition(ccp(bakeMachine->getPosition().x-x_x, bakeMachine->getPosition().y-70));
+        CCArray* frame = CCArray::create();
+        for (int i =1; i<4; i++) {
+            CCString *name = CCString::createWithFormat("fire%d.png",i);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+        animation->setDelayPerUnit(0.2f);
+        CCAnimate *animate = CCAnimate::create(animation);
+    //    CCRepeatForever::create(animate);
+        fire->runAction(CCRepeatForever::create(animate));
+        bakeMachine->addChild(fire);
+        this->showPizza();
     }
-    CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-    animation->setDelayPerUnit(0.2f);
-    CCAnimate *animate = CCAnimate::create(animation);
-//    CCRepeatForever::create(animate);
-    fire->runAction(CCRepeatForever::create(animate));
-    bakeMachine->addChild(fire);
-    this->showPizza();
+
 //    this->playFireBakeMp3();
 }
 
@@ -174,49 +193,55 @@ void BakedPizza::playFireBakeMp3(){
 
 void BakedPizza::showPizza(){
     CCSprite* bakeMachine = (CCSprite*)this->getChildByTag(kBakeMachine);
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/baked_pizza.plist");
-    pizza = CCSprite::createWithSpriteFrameName("baked_pizza1.png");
-    pizza->setScale(2);
-    pizza->setTag(kPizza);
-    pizza->setPosition(ccp(bakeMachine->getPosition().x-x_x, bakeMachine->getPosition().y-162));
-    bakeMachine->addChild(pizza,1);
-    
-    CCSprite* pizzaPlate = CCSprite::create("background/bakeboard.png");
-    pizzaPlate->setPosition(ccp(pizza->getContentSize().width/2,-3));
-    pizza->addChild(pizzaPlate,1);
+    if (bakeMachine!=NULL) {
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/baked_pizza.plist");
+        pizza = CCSprite::createWithSpriteFrameName("baked_pizza1.png");
+        pizza->setScale(2);
+        pizza->setTag(kPizza);
+        pizza->setPosition(ccp(bakeMachine->getPosition().x-x_x+7, bakeMachine->getPosition().y-162));
+        bakeMachine->addChild(pizza,1);
+        
+        CCSprite* pizzaPlate = CCSprite::create("background/bakeboard.png");
+        pizzaPlate->setPosition(ccp(pizza->getContentSize().width/2,-3));
+        pizza->addChild(pizzaPlate,1);
+    }
+
 }
 
 void BakedPizza::pizzaAction(){
     CCSprite* bakeMachine = (CCSprite*)this->getChildByTag(kBakeMachine);
-    pizza = (CCSprite*)bakeMachine->getChildByTag(kPizza);
-    if (pizza!=NULL) {
-        CCArray* frame = CCArray::create();
-        for (int i =1; i<4; i++) {
-            CCString *name = CCString::createWithFormat("baked_pizza%d.png",i);
-            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (bakeMachine!=NULL) {
+        pizza = (CCSprite*)bakeMachine->getChildByTag(kPizza);
+        if (pizza!=NULL) {
+            CCArray* frame = CCArray::create();
+            for (int i =1; i<4; i++) {
+                CCString *name = CCString::createWithFormat("baked_pizza%d.png",i);
+                frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+            }
+            CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+            animation->setDelayPerUnit(1.5f);
+            CCAnimate *animate = CCAnimate::create(animation);
+            CCFiniteTimeAction *action = CCSpawn::create(CCCallFunc::create(this, callfunc_selector(BakedPizza::playFireBakeMp3)),
+                                                          NULL);
+            CCRepeat* repeat = CCRepeat::create(action, 2);
+            
+            CCFiniteTimeAction *action1 = CCSpawn::create(CCCallFunc::create(this, callfunc_selector(BakedPizza::showTime)),
+                                                          repeat,
+                                                          NULL);
+            
+            CCFiniteTimeAction *action2 = CCSpawn::create(CCScaleTo::create(0.4, 1.3),
+                                                          CCCallFunc::create(this, callfunc_selector(BakedPizza::bakeMp3)),
+                                                          NULL);
+            pizza->runAction(CCSequence::create(action2,
+                                                action1,
+                                                CCDelayTime::create(0.5),
+                                                CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam)),
+                                                animate,
+                                                NULL));
+            
         }
-        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-        animation->setDelayPerUnit(1.5f);
-        CCAnimate *animate = CCAnimate::create(animation);
-        CCFiniteTimeAction *action = CCSpawn::create(CCCallFunc::create(this, callfunc_selector(BakedPizza::playFireBakeMp3)),
-                                                      NULL);
-        CCRepeat* repeat = CCRepeat::create(action, 2);
-        
-        CCFiniteTimeAction *action1 = CCSpawn::create(CCCallFunc::create(this, callfunc_selector(BakedPizza::showTime)),
-                                                      repeat,
-                                                      NULL);
-        
-        CCFiniteTimeAction *action2 = CCSpawn::create(CCScaleTo::create(0.4, 1.3),
-                                                      CCCallFunc::create(this, callfunc_selector(BakedPizza::bakeMp3)),
-                                                      NULL);
-        pizza->runAction(CCSequence::create(action2,
-                                            action1,
-                                            CCDelayTime::create(0.5),
-                                            CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam)),
-                                            animate,
-                                            NULL));
-        
     }
+
 }
 
 void BakedPizza::bakeMp3(){
@@ -225,78 +250,87 @@ void BakedPizza::bakeMp3(){
 
 void BakedPizza::showSteam(){
     CCSprite* bakeMachine = (CCSprite*)this->getChildByTag(kBakeMachine);
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/baked_pizza.plist");
-    CCSprite* steams = CCSprite::create("pizza/element/steam.png");
-    steams->setScale(0.5);
-//    steams->setTag(kPizza);
-//    steams->setOpacity(0.9);
-    steams->setPosition(ccp(bakeMachine->getPosition().x-x_x, bakeMachine->getPosition().y-10));
-//    CCFiniteTimeAction *action1 = CCSequence::create(CCScaleTo::create(0.5, 0.5),
-//                                                     CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam1)),
-//                                                     CCScaleTo::create(0.8, 0.6),
-//                                                     CCScaleTo::create(0.5, 0.5),
-//                                                     CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
-//                                                     NULL);
-    CCRepeat* repeat = CCRepeat::create(CCSequence::create(CCCallFuncN::create(this, callfuncN_selector(BakedPizza::canShowSteam)),
-                                                           CCScaleTo::create(0.4, 0.5),
-//                                                           CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam1)),
-                                                           CCScaleTo::create(0.5, 0.6),
-                                                           CCScaleTo::create(0.4, 0.5),
-                                                           CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
-                                                           NULL),3);
-    steams->runAction(CCSpawn::create(repeat,
-                                      CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam1)),
-                                      NULL));
-    bakeMachine->addChild(steams,1);
+    if (bakeMachine!=NULL) {
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/baked_pizza.plist");
+        CCSprite* steams = CCSprite::create("pizza/element/steam.png");
+        steams->setScale(0.5);
+    //    steams->setTag(kPizza);
+    //    steams->setOpacity(0.9);
+        steams->setPosition(ccp(bakeMachine->getPosition().x-x_x, bakeMachine->getPosition().y-10));
+    //    CCFiniteTimeAction *action1 = CCSequence::create(CCScaleTo::create(0.5, 0.5),
+    //                                                     CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam1)),
+    //                                                     CCScaleTo::create(0.8, 0.6),
+    //                                                     CCScaleTo::create(0.5, 0.5),
+    //                                                     CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
+    //                                                     NULL);
+        CCRepeat* repeat = CCRepeat::create(CCSequence::create(CCCallFuncN::create(this, callfuncN_selector(BakedPizza::canShowSteam)),
+                                                               CCScaleTo::create(0.4, 0.5),
+    //                                                           CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam1)),
+                                                               CCScaleTo::create(0.5, 0.6),
+                                                               CCScaleTo::create(0.4, 0.5),
+                                                               CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
+                                                               NULL),3);
+        steams->runAction(CCSpawn::create(repeat,
+                                          CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam1)),
+                                          NULL));
+        bakeMachine->addChild(steams,1);
+    }
+
 }
 
 void BakedPizza::showSteam1(){
     CCSprite* bakeMachine = (CCSprite*)this->getChildByTag(kBakeMachine);
-    CCSprite* steams1 = CCSprite::create("pizza/element/steam.png");
-    steams1->setScale(0.5);
-//    steams->setTag(kPizza);
-//    steams1->setScale(0.3);
-//    steams1->setOpacity(0.9);
-    steams1->setPosition(ccp(bakeMachine->getPosition().x-50-x_x, bakeMachine->getPosition().y-70));
-//    CCFiniteTimeAction *action2 = CCSequence::create(CCScaleTo::create(0.5, 0.5),
-//                                                     CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam2)),
-//                                                     CCScaleTo::create(0.8, 0.6),
-//                                                     CCScaleTo::create(0.5, 0.5),
-//                                                     CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
-//                                                     NULL);
-    CCRepeat* repeat1 = CCRepeat::create(CCSequence::create(CCCallFuncN::create(this, callfuncN_selector(BakedPizza::canShowSteam)),
-                                                            CCScaleTo::create(0.4, 0.5),
-                                                            CCScaleTo::create(0.5, 0.6),
-                                                            CCScaleTo::create(0.4, 0.5),
-                                                            CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
-                                                            NULL),3);
-    steams1->runAction(CCSpawn::create(repeat1,
-                                       CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam2)),
-                                       NULL));
-    bakeMachine->addChild(steams1,1);
+    if (bakeMachine!=NULL) {
+        CCSprite* steams1 = CCSprite::create("pizza/element/steam.png");
+        steams1->setScale(0.5);
+    //    steams->setTag(kPizza);
+    //    steams1->setScale(0.3);
+    //    steams1->setOpacity(0.9);
+        steams1->setPosition(ccp(bakeMachine->getPosition().x-50-x_x, bakeMachine->getPosition().y-70));
+    //    CCFiniteTimeAction *action2 = CCSequence::create(CCScaleTo::create(0.5, 0.5),
+    //                                                     CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam2)),
+    //                                                     CCScaleTo::create(0.8, 0.6),
+    //                                                     CCScaleTo::create(0.5, 0.5),
+    //                                                     CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
+    //                                                     NULL);
+        CCRepeat* repeat1 = CCRepeat::create(CCSequence::create(CCCallFuncN::create(this, callfuncN_selector(BakedPizza::canShowSteam)),
+                                                                CCScaleTo::create(0.4, 0.5),
+                                                                CCScaleTo::create(0.5, 0.6),
+                                                                CCScaleTo::create(0.4, 0.5),
+                                                                CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
+                                                                NULL),3);
+        steams1->runAction(CCSpawn::create(repeat1,
+                                           CCCallFunc::create(this, callfunc_selector(BakedPizza::showSteam2)),
+                                           NULL));
+        bakeMachine->addChild(steams1,1);
+    }
+
 }
 
 void BakedPizza::showSteam2(){
     CCSprite* bakeMachine = (CCSprite*)this->getChildByTag(kBakeMachine);
-    CCSprite* steams2 = CCSprite::create("pizza/element/steam.png");
-    steams2->setScale(0.5);
-//    steams->setTag(kPizza);
-//    steams2->setScale(0.3);
-//    steams2->setOpacity(0.9);
-    steams2->setPosition(ccp(bakeMachine->getPosition().x+50-x_x, bakeMachine->getPosition().y-70));
-//    CCFiniteTimeAction *action3 = CCSequence::create(CCScaleTo::create(0.5, 0.5),
-//                                                     CCScaleTo::create(0.8, 0.6),
-//                                                     CCScaleTo::create(0.5, 0.5),
-//                                                     CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
-//                                                     NULL);
-    CCRepeat* repeat2 = CCRepeat::create(CCSequence::create(CCCallFuncN::create(this, callfuncN_selector(BakedPizza::canShowSteam)),
-                                                            CCScaleTo::create(0.4, 0.5),
-                                                            CCScaleTo::create(0.5, 0.6),
-                                                            CCScaleTo::create(0.4, 0.5),
-                                                            CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
-                                                           NULL),3);
-    steams2->runAction(repeat2);
-    bakeMachine->addChild(steams2,1);
+    if (bakeMachine!=NULL) {
+        CCSprite* steams2 = CCSprite::create("pizza/element/steam.png");
+        steams2->setScale(0.5);
+    //    steams->setTag(kPizza);
+    //    steams2->setScale(0.3);
+    //    steams2->setOpacity(0.9);
+        steams2->setPosition(ccp(bakeMachine->getPosition().x+50-x_x, bakeMachine->getPosition().y-70));
+    //    CCFiniteTimeAction *action3 = CCSequence::create(CCScaleTo::create(0.5, 0.5),
+    //                                                     CCScaleTo::create(0.8, 0.6),
+    //                                                     CCScaleTo::create(0.5, 0.5),
+    //                                                     CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
+    //                                                     NULL);
+        CCRepeat* repeat2 = CCRepeat::create(CCSequence::create(CCCallFuncN::create(this, callfuncN_selector(BakedPizza::canShowSteam)),
+                                                                CCScaleTo::create(0.4, 0.5),
+                                                                CCScaleTo::create(0.5, 0.6),
+                                                                CCScaleTo::create(0.4, 0.5),
+                                                                CCCallFuncN::create(this, callfuncN_selector(BakedPizza::removeSteam)),
+                                                               NULL),3);
+        steams2->runAction(repeat2);
+        bakeMachine->addChild(steams2,1);
+    }
+
 }
 
 void BakedPizza::removeSteam(CCObject *pSender){
@@ -383,9 +417,12 @@ void BakedPizza::goNext(){
 }
 
 void BakedPizza::clickBack(){
-    if (PizzaManager::sharedManager()->whichPizza != 1) {
+    if (PizzaManager::sharedManager()->whichPizza != 1 ) {
         CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, AddTopping::scene(), ccBLACK));
-    }else{
+//    }else if(PizzaManager::sharedManager()->whichPizza == 7 || PizzaManager::sharedManager()->whichPizza == 8){
+//        CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, SelectTopping::scene(), ccBLACK));
+    }
+    else{
         CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, MakePizza::scene(), ccBLACK));
     }
 }
@@ -398,6 +435,7 @@ void BakedPizza::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     CCSprite* pizza = (CCSprite*)bakeMachine->getChildByTag(kPizza);
     CCPoint pizzaPos =bakeMachine->convertToNodeSpace(location);
     CCSprite* back = (CCSprite*)this->getChildByTag(kBack);
+    CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
     this->unschedule(schedule_selector(BakedPizza::guardAction));
     this->removeChildByTag(kGuard);
     if (((pizza && pizza->boundingBox().containsPoint(pizzaPos)) || (fire && fire->boundingBox().containsPoint(pizzaPos))) && !touchPizza) {
@@ -410,15 +448,21 @@ void BakedPizza::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     
     if (back!=NULL && back->boundingBox().containsPoint(location) && backClick == false) {
         backClick = true;
+//        PizzaManager::sharedManager()->selectedNum=0;
         SimpleAudioEngine::sharedEngine()->stopAllEffects();
 //        SimpleAudioEngine::sharedEngine()->playEffect("mp3/done.mp3");
-//        PizzaManager::sharedManager()->cleanAllSprite();
+        PizzaManager::sharedManager()->cleanTopping();
         CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
         //            homeBtn->setScale(1.2);
         //            touchSprite = homeBtn;
         SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
         back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(BakedPizza::clickBack))));
 //        PizzaManager::sharedManager()->cleanAllSprite();
+    }else if (next !=NULL && next->boundingBox().containsPoint(location) && clickNext==false) {
+        clickNext = true;
+        CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+        SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+        next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(BakedPizza::goNext))));
     }
 //    if (machine!=NULL && machine->boundingBox().containsPoint(location) && bakeComplate && bakeFinish) {
 //        CCFiniteTimeAction *action = CCSpawn::create(CCMoveTo::create(0.3, ccp(center.x-250,center.y-100)),
@@ -448,9 +492,9 @@ void BakedPizza::ccTouchesMoved(CCSet *pTouches, CCEvent *pEvent){
 
 void BakedPizza::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
     CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());
-    CCPoint location = CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
-    CCSprite* machine = (CCSprite*)this->getChildByTag(kMachine);
-    CCSprite* pizza = (CCSprite*)this->getChildByTag(kPizza);
+//    CCPoint location = CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
+//    CCSprite* machine = (CCSprite*)this->getChildByTag(kMachine);
+//    CCSprite* pizza = (CCSprite*)this->getChildByTag(kPizza);
 //    float rectWidth = 40;
 //    float rectHeight = 40;
 //    float storeWidth = 400;

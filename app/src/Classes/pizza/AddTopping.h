@@ -30,9 +30,15 @@ public:
     virtual void scrollViewDidScroll(extension::CCScrollView *view);
     virtual void scrollViewDidZoom(extension::CCScrollView *view);
     
-    virtual void ccTouchesBegan(CCSet *pTouches,CCEvent *pEvent);
-    virtual void ccTouchesMoved(CCSet *pTouches,CCEvent *pEvent);
-    virtual void ccTouchesEnded(CCSet *pTouches,CCEvent *pEvent);
+//    virtual void ccTouchesBegan(CCSet *pTouches,CCEvent *pEvent);
+//    virtual void ccTouchesMoved(CCSet *pTouches,CCEvent *pEvent);
+//    virtual void ccTouchesEnded(CCSet *pTouches,CCEvent *pEvent);
+    virtual void registerWithTouchDispatcher();
+    virtual bool ccTouchBegan(cocos2d::CCTouch* touch, cocos2d::CCEvent* event);
+    virtual void ccTouchEnded(cocos2d::CCTouch* touch, cocos2d::CCEvent* event);
+    virtual void ccTouchMoved(cocos2d::CCTouch* touch, cocos2d::CCEvent* event);
+    virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
+    
     CCPoint center;
     CCRect createRectByPoint(CCPoint point,float width,float height);
     void showTopping();
@@ -79,6 +85,8 @@ public:
     int touchTopping=0;
     int x_x=0;
     
+    float iphoneXoffsetX;
+    
     float storeWidth = 0.0;
     float storeHeight = 0.0;
     
@@ -105,7 +113,13 @@ public:
     
     bool selectedTop = false;
     
+    bool clickNext;
+    
+    bool addTopping;
+    
     void clickBack();
+    
+//    int curPizza;
     CREATE_FUNC(AddTopping);
 };
 #endif /* AddTopping_hpp */

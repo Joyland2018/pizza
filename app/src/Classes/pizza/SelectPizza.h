@@ -34,20 +34,12 @@ public:
     void addLock(CCSprite* pSprite,CCSize spriteSize);
     
     int x_x=0;
-    int x_y=0;
+    
     bool backClick;
-    CCSprite *bt_wordblock;
-    CCSprite *bt_wordbreak;
-    CCSprite *bt_shapepuzzle;
-    CCSprite *bt_firstword;
-    CCSprite *bt_background;
-    CCSprite *bt_Jorland;
-    CCSprite *bt_Match;
-    CCSprite *bt_ad;
-    int select;
-
-    void clickBuy();
+    
     void clickBack();
+    
+    bool selectedPizza;
     CREATE_FUNC(SelectPizza);
 };
 

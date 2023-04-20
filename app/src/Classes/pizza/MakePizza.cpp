@@ -29,6 +29,7 @@ enum{
     kCheeserub = 998,
     kSauce=20,
     kCheese=100,
+    kNextTag = 199,
 };
 
 CCScene* MakePizza::scene(){
@@ -55,8 +56,9 @@ bool MakePizza::init(){
     if (!CCLayer::init()) {
         return false;
     }
-    
+    clickNext = false;
     backClick = false;
+    selectedNough=false;
     CCPoint visibleOrigin=CCDirector::sharedDirector()->getVisibleOrigin();
     CCSize visibleSize = CCDirector::sharedDirector()->getVisibleSize();
     center = GameManager::sharedManager()->getCenter();
@@ -77,17 +79,16 @@ bool MakePizza::init(){
     this->addChild(back);
     if (GameManager::sharedManager()->isAndroidPad()) {
         x_x=100;
-        y_x=-5;
-        sauce_x=-50;
+        sauce_x=-55;
     }else if(GameManager::sharedManager()->isIphoneX()){
-        y_x=100;
+        y_x=130;
         sauce_x=100;
     }
     
     CCSprite* money = CCSprite::create("background/money.png");
     money->setPosition(ccp(visibleOrigin.x+visibleSize.width-100, visibleSize.height-50));
 //    money->setTag(kMoney);
-    this->addChild(money,10);
+//    this->addChild(money,10);
     
     CCString* curscore = CCString::createWithFormat("%d",GameManager::sharedManager()->getCurrentCoin());
     const char* curscores = curscore->getCString();
@@ -95,15 +96,16 @@ bool MakePizza::init(){
     curallscores->setColor(ccWHITE);
 //    curallscores->setTag(100);
     curallscores->setPosition(ccp(visibleOrigin.x+visibleSize.width-70, visibleSize.height-50));
-    this->addChild(curallscores,11);
-
-
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
-    }
-
+//    this->addChild(curallscores,11);
+    
+    CCSprite* next = CCSprite::create("background/next.png");
+    next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
+    next->setTag(kNextTag);
+    this->addChild(next);
+    
     if (!selectedNough && !PizzaManager::sharedManager()->noughComplate) {
         this->selectNough();
+        next->setVisible(false);
     }else{
         showNough();
     }
@@ -157,13 +159,16 @@ void MakePizza::selectNough(){
 void MakePizza::removeNough(){
     for (int i = 1; i<4; i++) {
         CCSprite* nough = (CCSprite*)this->getChildByTag(kNough+i);
+        if (nough!=NULL) {
+            CCFiniteTimeAction *action = CCSpawn::create(CCMoveTo::create(0.5,ccp(250+(i-1)*350+y_x, center.y+800)),
+                                                         CCCallFunc::create(this, callfunc_selector(MakePizza::noughActionMp3)),
+                                                         NULL);
+            nough->runAction(CCSequence::create(action,
+                                                CCRemoveSelf::create(),
+                                                NULL));
+        }
 //        nough->runAction(CCMoveTo::create(0.5,ccp(250+(i-1)*350, center.y+800)));
-        CCFiniteTimeAction *action = CCSpawn::create(CCMoveTo::create(0.5,ccp(250+(i-1)*350+y_x, center.y+800)),
-                                                     CCCallFunc::create(this, callfunc_selector(MakePizza::noughActionMp3)),
-                                                     NULL);
-        nough->runAction(CCSequence::create(action,
-                                            CCRemoveSelf::create(),
-                                            NULL));
+
     }
 }
 
@@ -193,13 +198,16 @@ void MakePizza::noughActionMp3(){
 
 void MakePizza::noughSteam(){
     CCSprite* noughSteam = (CCSprite*)this->getChildByTag(kNougher);
-    CCSprite* steam = CCSprite::create("pizza/element/steam.png");
-    steam->setPosition(ccp(noughSteam->getPosition().x-250-y_x, noughSteam->getPosition().y));
-//    steam->setScale(0.7);
-    steam->runAction(CCSequence::create(CCScaleTo::create(0.5, 3),
-                                        CCRemoveSelf::create(),
-                                        NULL));
-    noughSteam->addChild(steam,-2);
+    if (noughSteam!=NULL) {
+        CCSprite* steam = CCSprite::create("pizza/element/steam.png");
+        steam->setPosition(ccp(noughSteam->getPosition().x-250-y_x, noughSteam->getPosition().y));
+    //    steam->setScale(0.7);
+        steam->runAction(CCSequence::create(CCScaleTo::create(0.5, 3),
+                                            CCRemoveSelf::create(),
+                                            NULL));
+        noughSteam->addChild(steam,-2);
+    }
+
 //    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("animate/smoke.plist");
 //    CCSprite* steam = CCSprite::createWithSpriteFrameName("smoke_1.png");
 //    steam->setScale(10);
@@ -557,6 +565,11 @@ void MakePizza::showRollingPin(){
     rollingPin->setScale(0.6);
     rollingPin->setTag(kRollingpin);
     this->addChild(rollingPin,9);
+    
+    CCSprite* nextBtn = (CCSprite*)this->getChildByTag(kNextTag);
+    if (nextBtn!=NULL && nextBtn->isVisible()==false) {
+        nextBtn->setVisible(true);
+    }
 }
 
 void MakePizza::rollingAction(int index){
@@ -667,6 +680,7 @@ void MakePizza::cheeseNum(){
 
 void MakePizza::goNext(){
 //    PizzaManager::sharedManager()->noughComplate=false;
+    CCLOG("---哪种披萨%d---",PizzaManager::sharedManager()->whichPizza);
     if(PizzaManager::sharedManager()->whichPizza == 1){
         CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, BakedPizza::scene(), ccBLACK));
     }else if(PizzaManager::sharedManager()->whichPizza ==3){
@@ -702,6 +716,7 @@ void MakePizza::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     CCSprite* rollpin = (CCSprite*)this->getChildByTag(kRollingpin);
     CCSprite* rollspoon = (CCSprite*)this->getChildByTag(kRollspoon);
     CCSprite* cheesesrub = (CCSprite*)this->getChildByTag(kCheeserub);
+    CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
     beginY=location.y;
     if (back!=NULL && back->boundingBox().containsPoint(location) && !PizzaManager::sharedManager()->noughComplate && backClick == false) {
         backClick = true;
@@ -717,6 +732,16 @@ void MakePizza::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
         //            touchSprite = homeBtn;
         SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
         back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(MakePizza::clickToBack))));
+    }else if (next !=NULL && next->boundingBox().containsPoint(location) && next->isVisible()==true && clickNext==false) {
+        clickNext = true;
+        CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+        SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+        if (PizzaManager::sharedManager()->noughComplate==false && (PizzaManager::sharedManager()->whichPizza ==2 || PizzaManager::sharedManager()->whichPizza ==4 || PizzaManager::sharedManager()->whichPizza ==6)) {
+            next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(MakePizza::goMaterial))));
+        }else{
+            next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(MakePizza::goNext))));
+        }
+        
     }
     
     if (rollpin!=NULL &&  rollpin->boundingBox().containsPoint(location)) {
@@ -736,9 +761,6 @@ void MakePizza::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
         for (int i = 1; i<4; i++) {
             CCSprite* nough = (CCSprite*)this->getChildByTag(kNough+i);
             if (nough != NULL && nough->boundingBox().containsPoint(location)) {
-                if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-                    GameManager::sharedManager()->showInterstitial();
-                }
                 selectedNough=true;
                 SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
                 this->runAction(CCSequence::create(CCDelayTime::create(0.2),
@@ -778,32 +800,35 @@ void MakePizza::ccTouchesMoved(CCSet *pTouches, CCEvent *pEvent){
         }
        
         CCSprite* nougher = (CCSprite*)this->getChildByTag(kNougher);
-        if (rollingIndex ==1 && isRolled) {
-            nougher->runAction(CCScaleTo::create(0.2, 0.5));
-            SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
-            canRolling = true;
-        }else if (rollingIndex ==2 && isRolled) {
-            nougher->runAction(CCScaleTo::create(0.2, 0.7));
-            SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
-            canRolling = true;
-        }else if (rollingIndex ==3 && isRolled) {
-            nougher->runAction(CCScaleTo::create(0.2, 0.9));
-            SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
-            canRolling = true;
-        }else if (rollingIndex ==4 && isRolled) {
-            SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
-//            canRolling = false;
-            isRolled=false;
-            canRolling = true;
-            cannotSpoon = true;
-            nougher->runAction(CCSequence::create(CCScaleTo::create(0.2, 1.1),
-                                                  CCCallFunc::create(this, callfunc_selector(MakePizza::cannotRoll)),
-                                                  CCDelayTime::create(0.5),
-                                                  CCCallFunc::create(this, callfunc_selector(MakePizza::noughAction)),
-                                                  NULL));
-            rollingIndex=0;
-//            this->noughAction();
+        if (nougher!=NULL) {
+            if (rollingIndex ==1 && isRolled) {
+                nougher->runAction(CCScaleTo::create(0.2, 0.5));
+                SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
+                canRolling = true;
+            }else if (rollingIndex ==2 && isRolled) {
+                nougher->runAction(CCScaleTo::create(0.2, 0.7));
+                SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
+                canRolling = true;
+            }else if (rollingIndex ==3 && isRolled) {
+                nougher->runAction(CCScaleTo::create(0.2, 0.9));
+                SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
+                canRolling = true;
+            }else if (rollingIndex ==4 && isRolled) {
+                SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
+    //            canRolling = false;
+                isRolled=false;
+                canRolling = true;
+                cannotSpoon = true;
+                nougher->runAction(CCSequence::create(CCScaleTo::create(0.2, 1.1),
+                                                      CCCallFunc::create(this, callfunc_selector(MakePizza::cannotRoll)),
+                                                      CCDelayTime::create(0.5),
+                                                      CCCallFunc::create(this, callfunc_selector(MakePizza::noughAction)),
+                                                      NULL));
+                rollingIndex=0;
+    //            this->noughAction();
+            }
         }
+
         
 //        if (rollingIndex ==4) {
 //

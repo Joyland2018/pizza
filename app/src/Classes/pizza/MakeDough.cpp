@@ -31,6 +31,7 @@ enum{
     kAddSugar=72,
     kAddOli=73,
     kAddSalt=74,
+    kNextTag = 188,
 };
 
 
@@ -60,6 +61,13 @@ bool MakeDough::init(){
         return false;
     }
     clickBack =false;
+    flourers = NULL;
+    clickNext = false;
+    flours = NULL;
+    water = NULL;
+    sugar = NULL;
+    olive = NULL;
+    flour = NULL;
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/pour_water.plist");
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/sugar.plist");
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/oli.plist");
@@ -100,7 +108,7 @@ bool MakeDough::init(){
     CCSprite* money = CCSprite::create("background/money.png");
     money->setPosition(ccp(visibleOrigin.x+visibleSize.width-100, visibleSize.height-50));
 //    money->setTag(kMoney);
-    this->addChild(money,10);
+//    this->addChild(money,10);
     
     CCString* curscore = CCString::createWithFormat("%d",GameManager::sharedManager()->getCurrentCoin());
     const char* curscores = curscore->getCString();
@@ -108,13 +116,15 @@ bool MakeDough::init(){
     curallscores->setColor(ccWHITE);
 //    curallscores->setTag(100);
     curallscores->setPosition(ccp(visibleOrigin.x+visibleSize.width-70, visibleSize.height-50));
-    this->addChild(curallscores,11);
+//    this->addChild(curallscores,11);
+    
+    
+    CCSprite* next = CCSprite::create("background/next.png");
+    next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
+    next->setTag(kNextTag);
+    this->addChild(next);
     
     this->showIphone();
-
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
-    }
     
 //    this->scheduleOnce(schedule_selector(MakeDough::showWater), 0.5f);
     this->scheduleOnce(schedule_selector(MakeDough::showFlour), 0.5f);
@@ -140,15 +150,18 @@ void MakeDough::showIphone(){
 
 void MakeDough::showIphoneAction(){
     CCSprite* iphone=(CCSprite*)this->getChildByTag(kIphone);
-    CCArray* frame = CCArray::create();
-    for (int m =1; m<3; m++) {
-        CCString *name = CCString::createWithFormat("iPhone%d.png",m);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (iphone!=NULL) {
+        CCArray* frame = CCArray::create();
+        for (int m =1; m<3; m++) {
+            CCString *name = CCString::createWithFormat("iPhone%d.png",m);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+            CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+            animation->setDelayPerUnit(0.3f);
+            CCAnimate *animate = CCAnimate::create(animation);
+            iphone->runAction(animate);
     }
-        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-        animation->setDelayPerUnit(0.3f);
-        CCAnimate *animate = CCAnimate::create(animation);
-        iphone->runAction(animate);
+
 }
 
 void MakeDough::canPourWater(){
@@ -201,7 +214,7 @@ void MakeDough::cannotPourFlour(){
 
 void MakeDough::showWater(){
     
-    
+    if (water ==NULL) {
         water =CCSprite::createWithSpriteFrameName("pour_water1.png");
         water->setPosition(ccp(center.x-1000,center.y+50));
 //        sugar->runAction(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-115,center.y+80)), 0.3f));
@@ -210,19 +223,21 @@ void MakeDough::showWater(){
                                             NULL));
         water->setTag(kWater);
         this->addChild(water,9);
+    }
+
 }
 
 void MakeDough::showSugar(){
     
     //糖罐
-    CCSprite* sugar =CCSprite::createWithSpriteFrameName("sugar1.png");
-        sugar->setPosition(ccp(center.x-1000,center.y+50));
+    CCSprite* sugarSpr =CCSprite::createWithSpriteFrameName("sugar1.png");
+    sugarSpr->setPosition(ccp(center.x-1000,center.y+50));
 //        sugar->runAction(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-115,center.y+80)), 0.3f));
-        sugar->runAction(CCSequence::create(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-175,center.y+75)), 0.3f),
+    sugarSpr->runAction(CCSequence::create(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-175,center.y+75)), 0.3f),
                                             CCCallFunc::create(this, callfunc_selector(MakeDough::canPourSugar)),
                                             NULL));
-        sugar->setTag(kSugar);
-        this->addChild(sugar,9);
+    sugarSpr->setTag(kSugar);
+        this->addChild(sugarSpr,9);
 }
 
 
@@ -230,14 +245,14 @@ void MakeDough::showSugar(){
 void MakeDough::showOlive(){
     
   
-    CCSprite* olive =CCSprite::createWithSpriteFrameName("oil1.png");
-        olive->setPosition(ccp(center.x-1000,center.y+50));
+    CCSprite* oliveSpr =CCSprite::createWithSpriteFrameName("oil1.png");
+    oliveSpr->setPosition(ccp(center.x-1000,center.y+50));
 //        sugar->runAction(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-115,center.y+80)), 0.3f));
-        olive->runAction(CCSequence::create(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-140,center.y+120)), 0.3f),
+    oliveSpr->runAction(CCSequence::create(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-140,center.y+120)), 0.3f),
                                             CCCallFunc::create(this, callfunc_selector(MakeDough::canPourOlive)),
                                             NULL));
-        olive->setTag(kOlive);
-        this->addChild(olive,9);
+    oliveSpr->setTag(kOlive);
+        this->addChild(oliveSpr,9);
 }
 
 void MakeDough::showSalt(){
@@ -255,67 +270,76 @@ void MakeDough::showSalt(){
 
 void MakeDough::showFlour(){
     
-   
-    flourers =CCSprite::createWithSpriteFrameName("pour_flour1.png");
-        flourers->setPosition(ccp(center.x-1000,center.y+50));
-//        sugar->runAction(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-115,center.y+80)), 0.3f));
-        flourers->runAction(CCSequence::create(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-160,center.y+50)), 0.3f),
-                                            CCCallFunc::create(this, callfunc_selector(MakeDough::canPourFlour)),
-                                            NULL));
-        flourers->setTag(kFlour);
-        this->addChild(flourers,9);
+    if(flourers==NULL){
+        flourers =CCSprite::createWithSpriteFrameName("pour_flour1.png");
+            flourers->setPosition(ccp(center.x-1000,center.y+50));
+    //        sugar->runAction(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-115,center.y+80)), 0.3f));
+            flourers->runAction(CCSequence::create(CCEaseIn::create(CCMoveTo::create(1.0, ccp(center.x-160,center.y+50)), 0.3f),
+                                                CCCallFunc::create(this, callfunc_selector(MakeDough::canPourFlour)),
+                                                NULL));
+            flourers->setTag(kFlour);
+            this->addChild(flourers,9);
+    }
+
 }
 
 void MakeDough::showSpoon(){
     
     CCSprite* bowl = (CCSprite*)this->getChildByTag(kBowl);
-    CCSprite* spoon =CCSprite::create("pizza/element/spoon.png");
-    CCPoint pos = bowl->getPosition();
-    spoon->setPosition(ccp(bowl->getContentSize().width/1.3,pos.y+800));
-    CCFiniteTimeAction *action1=CCSpawn::create(CCRemoveSelf::create(),
-                                                CCCallFunc::create(this, callfunc_selector(MakeDough::showSpoon1)),
-                                                NULL);
-//    spoon->runAction(CCEaseIn::create(CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+30)), 0.3f));
-    
-//    CCActionInterval *forwardBy = CCJumpBy::create(0.3, ccp(0,0), 50, 1);
-//    CCActionInterval *backBy = forwardBy->reverse();
-    
-    spoon->runAction(CCSequence::create(CCEaseOut::create(CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/1.3,pos.y+150)), 0.3f),
-//                                        CCEaseOut::create(CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+40)), 0.1f),
-//                                        forwardBy,
-//                                        CCDelayTime::create(0.5),
-//                                        backBy,
-//                                        CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+30)),
-                                        action1,
-                                        NULL));
-//    spoon->setTag(kSpoon);
-    bowl->addChild(spoon);
-//    spoon->setAnchorPoint(ccp(0.5,0.5));
-    spoon->setRotation(20);
+    if (bowl!=NULL) {
+        CCSprite* spoon =CCSprite::create("pizza/element/spoon.png");
+        CCPoint pos = bowl->getPosition();
+        if (spoon!=NULL) {
+            spoon->setPosition(ccp(bowl->getContentSize().width/1.3,pos.y+800));
+            CCFiniteTimeAction *action1=CCSpawn::create(CCRemoveSelf::create(),
+                                                        CCCallFunc::create(this, callfunc_selector(MakeDough::showSpoon1)),
+                                                        NULL);
+            spoon->runAction(CCSequence::create(CCEaseOut::create(CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/1.3,pos.y+150)), 0.3f),
+        //                                        CCEaseOut::create(CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+40)), 0.1f),
+        //                                        forwardBy,
+        //                                        CCDelayTime::create(0.5),
+        //                                        backBy,
+        //                                        CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+30)),
+                                                action1,
+                                                NULL));
+        //    spoon->setTag(kSpoon);
+            bowl->addChild(spoon);
+        //    spoon->setAnchorPoint(ccp(0.5,0.5));
+            spoon->setRotation(20);
+        }
+
+    }
+
 }
 
 void MakeDough::showSpoon1(){
     rotation = 20;
     CCSprite* bowl = (CCSprite*)this->getChildByTag(kBowl);
-    CCSprite* spoon =CCSprite::create("pizza/element/spoon1.png");
-    CCPoint pos = bowl->getPosition();
-    spoon->setPosition(ccp(bowl->getContentSize().width/1.3,pos.y+150));
-    spoon->setTag(kSpoon);
-    bowl->addChild(spoon);
-//    bowl->setAnchorPoint(ccp(0.5,0.5));
-    spoon->setRotation(20);
-    
-    CCActionInterval *forwardBy = CCJumpBy::create(0.4, ccp(0,0), 10, 1);
-    CCActionInterval *backBy = forwardBy->reverse();
-    
-    spoon->runAction(CCSequence::create(
-//                                        CCEaseOut::create(CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+40)), 0.1f),
-                                        forwardBy,
-                                        CCCallFunc::create(this, callfunc_selector(MakeDough::spoonMp3)),
-//                                        CCDelayTime::create(0.5),
-                                        backBy,
-//                                        CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+30)),
-                                        NULL));
+    if (bowl!=NULL) {
+        CCSprite* spoon =CCSprite::create("pizza/element/spoon1.png");
+        CCPoint pos = bowl->getPosition();
+        if (spoon!=NULL) {
+            spoon->setPosition(ccp(bowl->getContentSize().width/1.3,pos.y+150));
+            spoon->setTag(kSpoon);
+            bowl->addChild(spoon);
+        //    bowl->setAnchorPoint(ccp(0.5,0.5));
+            spoon->setRotation(20);
+            
+            CCActionInterval *forwardBy = CCJumpBy::create(0.4, ccp(0,0), 10, 1);
+            CCActionInterval *backBy = forwardBy->reverse();
+            
+            spoon->runAction(CCSequence::create(
+        //                                        CCEaseOut::create(CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+40)), 0.1f),
+                                                forwardBy,
+                                                CCCallFunc::create(this, callfunc_selector(MakeDough::spoonMp3)),
+        //                                        CCDelayTime::create(0.5),
+                                                backBy,
+        //                                        CCMoveTo::create(1.0, ccp(bowl->getContentSize().width/2,pos.y+30)),
+                                                NULL));
+        }
+
+    }
+
 }
 
 void MakeDough::spoonMp3(){
@@ -324,141 +348,165 @@ void MakeDough::spoonMp3(){
 
 void MakeDough::addFlours(){
     CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
-    CCPoint pos = container->getPosition();
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
-    //糖罐
-    flourers =CCSprite::createWithSpriteFrameName("flour1.png");
-    flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-    flourers->setTag(kAddFlour);
-    container->addChild(flourers,-5);
+    if (container!=NULL) {
+        CCPoint pos = container->getPosition();
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
+        //糖罐
+        flourers =CCSprite::createWithSpriteFrameName("flour1.png");
+        flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+        flourers->setTag(kAddFlour);
+        container->addChild(flourers,-5);
 
-    CCArray* frame = CCArray::create();
-    for (int i =1; i<4; i++) {
-        CCString *name = CCString::createWithFormat("flour%d.png",i);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        CCArray* frame = CCArray::create();
+        for (int i =1; i<4; i++) {
+            CCString *name = CCString::createWithFormat("flour%d.png",i);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+       
+        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+        animation->setDelayPerUnit(0.2f);
+        CCAnimate *animate = CCAnimate::create(animation);
+        flourers->runAction(animate);
     }
-   
-    CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-    animation->setDelayPerUnit(0.2f);
-    CCAnimate *animate = CCAnimate::create(animation);
-    flourers->runAction(animate);
+
 //    SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
 }
 
 void MakeDough::addWater(){
-    flourers->removeFromParentAndCleanup(true);
-    CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
-    CCPoint pos = container->getPosition();
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
-    //糖罐
-//    CCSprite* water =CCSprite::createWithSpriteFrameName("flour3.png");
-//    water->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-//    water->setTag(kAddWater);
-//    container->addChild(water,-5);
-    
-    flourers =CCSprite::createWithSpriteFrameName("flour3.png");
-    flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-    flourers->setTag(kAddWater);
-    container->addChild(flourers,-5);
-//    flourers = CCSprite
-
-    CCArray* frame = CCArray::create();
-    for (int i =3; i<5; i++) {
-        CCString *name = CCString::createWithFormat("flour%d.png",i);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (flourers!=NULL) {
+        flourers->removeFromParentAndCleanup(true);
     }
-    CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-    animation->setDelayPerUnit(0.2f);
-    CCAnimate *animate = CCAnimate::create(animation);
-//    water->setTag(kAddWater);
-    flourers->runAction(animate);
+    CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
+    if (container!=NULL) {
+        CCPoint pos = container->getPosition();
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
+        //糖罐
+    //    CCSprite* water =CCSprite::createWithSpriteFrameName("flour3.png");
+    //    water->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+    //    water->setTag(kAddWater);
+    //    container->addChild(water,-5);
+        
+        flourers =CCSprite::createWithSpriteFrameName("flour3.png");
+        flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+        flourers->setTag(kAddWater);
+        container->addChild(flourers,-5);
+    //    flourers = CCSprite
+
+        CCArray* frame = CCArray::create();
+        for (int i =3; i<5; i++) {
+            CCString *name = CCString::createWithFormat("flour%d.png",i);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+        animation->setDelayPerUnit(0.2f);
+        CCAnimate *animate = CCAnimate::create(animation);
+    //    water->setTag(kAddWater);
+        flourers->runAction(animate);
+    }
+
 //    this->removeChildByTag(kAddFlour);
 //    SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/pourjuice.mp3");
 }
 
 void MakeDough::addSugar(){
-    flourers->removeFromParentAndCleanup(true);
-    CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
-    CCPoint pos = container->getPosition();
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
-    //糖罐
-//    CCSprite* sugar =CCSprite::createWithSpriteFrameName("flour4.png");
-//    sugar->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-//    sugar->setTag(kAddSugar);
-//    container->addChild(sugar,-5);
-    
-    flourers =CCSprite::createWithSpriteFrameName("flour4.png");
-    flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-    flourers->setTag(kAddSugar);
-    container->addChild(flourers,-5);
-
-    CCArray* frame = CCArray::create();
-    for (int i =4; i<6; i++) {
-        CCString *name = CCString::createWithFormat("flour%d.png",i);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (flourers!=NULL) {
+        flourers->removeFromParentAndCleanup(true);
     }
-    CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-    animation->setDelayPerUnit(0.2f);
-    CCAnimate *animate = CCAnimate::create(animation);
-    flourers->runAction(animate);
+    CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
+    if (container!=NULL) {
+        CCPoint pos = container->getPosition();
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
+        //糖罐
+    //    CCSprite* sugar =CCSprite::createWithSpriteFrameName("flour4.png");
+    //    sugar->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+    //    sugar->setTag(kAddSugar);
+    //    container->addChild(sugar,-5);
+        
+        flourers =CCSprite::createWithSpriteFrameName("flour4.png");
+        flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+        flourers->setTag(kAddSugar);
+        container->addChild(flourers,-5);
+
+        CCArray* frame = CCArray::create();
+        for (int i =4; i<6; i++) {
+            CCString *name = CCString::createWithFormat("flour%d.png",i);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+        animation->setDelayPerUnit(0.2f);
+        CCAnimate *animate = CCAnimate::create(animation);
+        flourers->runAction(animate);
+    }
+
 //    this->removeChildByTag(kAddWater);
 //    SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
 }
 
 void MakeDough::addOil(){
-    flourers->removeFromParentAndCleanup(true);
-    CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
-    CCPoint pos = container->getPosition();
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
-    //糖罐
-//    CCSprite* oil =CCSprite::createWithSpriteFrameName("flour5.png");
-//    oil->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-//    oil->setTag(kAddOli);
-//    container->addChild(oil,-5);
-    
-    flourers =CCSprite::createWithSpriteFrameName("flour5.png");
-    flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-    flourers->setTag(kAddOli);
-    container->addChild(flourers,-5);
-
-    CCArray* frame = CCArray::create();
-    for (int i =5; i<7; i++) {
-        CCString *name = CCString::createWithFormat("flour%d.png",i);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (flourers!=NULL) {
+        flourers->removeFromParentAndCleanup(true);
     }
-    CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-    animation->setDelayPerUnit(0.2f);
-    CCAnimate *animate = CCAnimate::create(animation);
-    flourers->runAction(animate);
+    CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
+    if (container!=NULL) {
+        CCPoint pos = container->getPosition();
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
+        //糖罐
+    //    CCSprite* oil =CCSprite::createWithSpriteFrameName("flour5.png");
+    //    oil->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+    //    oil->setTag(kAddOli);
+    //    container->addChild(oil,-5);
+        
+        flourers =CCSprite::createWithSpriteFrameName("flour5.png");
+        flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+        flourers->setTag(kAddOli);
+        container->addChild(flourers,-5);
+
+        CCArray* frame = CCArray::create();
+        for (int i =5; i<7; i++) {
+            CCString *name = CCString::createWithFormat("flour%d.png",i);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+        animation->setDelayPerUnit(0.2f);
+        CCAnimate *animate = CCAnimate::create(animation);
+        flourers->runAction(animate);
+    }
+
 //    this->removeChildByTag(kAddSugar);
 //    SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
 }
 
 void MakeDough::addSalt(){
-    flourers->removeFromParentAndCleanup(true);
-    CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
-    CCPoint pos = container->getPosition();
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
-    //糖罐
-//    CCSprite* salt =CCSprite::createWithSpriteFrameName("flour6.png");
-//    salt->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-//    salt->setTag(kAddSalt);
-//    container->addChild(salt,-5);
-    flourers =CCSprite::createWithSpriteFrameName("flour6.png");
-    flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-    flourers->setTag(kAddSalt);
-    container->addChild(flourers,-5);
-
-    CCArray* frame = CCArray::create();
-    for (int i =6; i<8; i++) {
-        CCString *name = CCString::createWithFormat("flour%d.png",i);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (flourers!=NULL) {
+        flourers->removeFromParentAndCleanup(true);
+        flourers= NULL;
     }
-    CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-    animation->setDelayPerUnit(0.2f);
-    CCAnimate *animate = CCAnimate::create(animation);
-//    this->removeChildByTag(kAddOli);
-    flourers->runAction(animate);
+    CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
+    if (container!=NULL) {
+        CCPoint pos = container->getPosition();
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
+        //糖罐
+    //    CCSprite* salt =CCSprite::createWithSpriteFrameName("flour6.png");
+    //    salt->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+    //    salt->setTag(kAddSalt);
+    //    container->addChild(salt,-5);
+        flourers =CCSprite::createWithSpriteFrameName("flour6.png");
+        flourers->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+        flourers->setTag(kAddSalt);
+        container->addChild(flourers,-5);
+
+        CCArray* frame = CCArray::create();
+        for (int i =6; i<8; i++) {
+            CCString *name = CCString::createWithFormat("flour%d.png",i);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+        animation->setDelayPerUnit(0.2f);
+        CCAnimate *animate = CCAnimate::create(animation);
+    //    this->removeChildByTag(kAddOli);
+        flourers->runAction(animate);
+    }
+
 //    SimpleAudioEngine::sharedEngine()->playBackgroundMusic("mp3/poursugar.mp3");
 }
 
@@ -468,15 +516,18 @@ void MakeDough::striMp3(){
 
 void MakeDough::showBowlFlour(){
     CCSprite* container =(CCSprite*)this->getChildByTag(kBowl);
-    CCPoint pos = container->getPosition();
-    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
-    if(flourers){
-        flourers->removeFromParentAndCleanup(true);
-        flourers=NULL;
+    if (container!=NULL) {
+        CCPoint pos = container->getPosition();
+        CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/flour.plist");
+        if(flourers){
+            flourers->removeFromParentAndCleanup(true);
+            flourers=NULL;
+        }
+        flours=CCSprite::createWithSpriteFrameName("flour7.png");
+        flours->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
+        container->addChild(flours,-5);
     }
-    flours=CCSprite::createWithSpriteFrameName("flour7.png");
-    flours->setPosition(ccp(container->getContentSize().width/2,pos.y-50));
-    container->addChild(flours,-5);
+
 }
 
 void MakeDough::cannotStirFlour(){
@@ -498,7 +549,9 @@ void MakeDough::striFlour(int index){
      
     CCString *name = CCString::createWithFormat("flour%d.png",index);
     CCSpriteFrame*  tomatoAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    flours->setDisplayFrame(tomatoAction);
+    if(flours!=NULL){
+        flours->setDisplayFrame(tomatoAction);
+    }
     if (stirTimes%2==0) {
 //        flours->runAction(CCCallFunc::create(this, callfunc_selector(MakeDough::striMp3)));
         this->striMp3();
@@ -781,9 +834,13 @@ void MakeDough::pourFlour(){
     
 void MakeDough::didAccelerate(cocos2d::CCAcceleration *pAccelerationValu){
     gracityX=pAccelerationValu->x;
+    CCSprite* iphone=(CCSprite*)this->getChildByTag(kIphone);
     if(gracityX>0.25){
-        this->unschedule(schedule_selector(MakeDough::showIphoneAction));
-        this->removeChildByTag(kIphone);
+        if(iphone!=NULL){
+            this->unschedule(schedule_selector(MakeDough::showIphoneAction));
+            iphone->removeFromParentAndCleanup(true);
+        }
+        
         if (!isPourWater && isCanPourWater) {
             pourWater();
         }else if (!isPourSugar && isCanPourSugar){
@@ -810,17 +867,19 @@ void MakeDough::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     CCSprite* back = (CCSprite*)this->getChildByTag(kBackTouch);
 //    CCSprite* originflavor = (CCSprite*)this->getChildByTag(kOriginflavor);
 //    beginX = location.x;
-    CCSprite* water = (CCSprite*)this->getChildByTag(kWater);
+    CCSprite* waterSpr = (CCSprite*)this->getChildByTag(kWater);
     CCSprite* sugers = (CCSprite*)this->getChildByTag(kSugar);
 //    CCSprite* yeast = (CCSprite*)this->getChildByTag(kYeast);
     CCSprite* oliver = (CCSprite*)this->getChildByTag(kOlive);
     CCSprite* salt = (CCSprite*)this->getChildByTag(kSalt);
-    CCSprite* flour = (CCSprite*)this->getChildByTag(kFlour);
+    CCSprite* flourSpr = (CCSprite*)this->getChildByTag(kFlour);
     CCSprite* bowl = (CCSprite*)this->getChildByTag(kBowl);
     CCSprite* spoon = (CCSprite*)bowl->getChildByTag(kSpoon);
+    CCSprite* iphone=(CCSprite*)this->getChildByTag(kIphone);
     CCPoint spoonPos =bowl->convertToNodeSpace(location);
     lastPos = spoonPos.x;
-    
+    CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
+
     
     if (back!=NULL && back->boundingBox().containsPoint(location) && clickBack == false) {
         clickBack=true;
@@ -829,8 +888,16 @@ void MakeDough::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
         //            touchSprite = homeBtn;
         SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
         back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(MakeDough::clickToBack))));
+    }else if (next !=NULL && next->boundingBox().containsPoint(location) && clickNext ==false) {
+        clickNext = true;
+        CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+        SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+        next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(MakeDough::goNext))));
     }
-    if (water!=NULL && water->boundingBox().containsPoint(location) && isCanPourWater) {
+    
+    
+    
+    if (waterSpr!=NULL && waterSpr->boundingBox().containsPoint(location) && isCanPourWater) {
         this->cannotPourWater();
         pourWater();
     }else if (sugers!=NULL && sugers->boundingBox().containsPoint(location) && isCanPourSugar){
@@ -842,13 +909,13 @@ void MakeDough::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     }else if (salt!=NULL && salt->boundingBox().containsPoint(location) && isCanPourSalt){
         this->cannotPourSalt();
         pourSalt();
-    }else if (flour!=NULL && flour->boundingBox().containsPoint(location) && isCanPourFlour){
+    }else if (flourSpr!=NULL && flourSpr->boundingBox().containsPoint(location) && isCanPourFlour){
         this->cannotPourFlour();
         pourFlour();
     }
-    if(GameManager::sharedManager()->firstPlayPizza){
+    if(GameManager::sharedManager()->firstPlayPizza && iphone!=NULL){
         this->unschedule(schedule_selector(MakeDough::showIphoneAction));
-        this->removeChildByTag(kIphone);
+        iphone->removeFromParentAndCleanup(true);
     }
 
     
@@ -971,9 +1038,9 @@ void MakeDough::goNext(){
 void MakeDough::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
     CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());
     CCPoint location=CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
-    CCSprite* bowl = (CCSprite*)this->getChildByTag(kBowl);
-    CCSprite* spoon = (CCSprite*)bowl->getChildByTag(kSpoon);
-    CCPoint spoonPos =bowl->convertToNodeSpace(location);
+//    CCSprite* bowl = (CCSprite*)this->getChildByTag(kBowl);
+//    CCSprite* spoon = (CCSprite*)bowl->getChildByTag(kSpoon);
+//    CCPoint spoonPos =bowl->convertToNodeSpace(location);
     if (touchSprite!=NULL) {
         touchSprite=NULL;
         flourIndex=8;

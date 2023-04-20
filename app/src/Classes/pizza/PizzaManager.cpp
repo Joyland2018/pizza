@@ -21,22 +21,24 @@ PizzaManager* PizzaManager::sharedManager(){
 void PizzaManager::initPizzaManager(){
     whichPizza = 0;
     whichShape = 0;
+//    selectedTopPos = 0;
+//    selectedTop=0;
+//    selectedNum=0;
+    this->cleanAllSprite();
     
     CCSize winsize = GameManager::sharedManager()->getViewVisibleSize();
     xDispostion=-950;
     halloXDis = -590;
-    for (int i = 0; i < 10; ++i) {
-        topping[i] = 99;
-    }
-    for (int i = 0; i < 100; ++i) {
-        addTop[i] = 55;
-    }
-
-    for (int i = 0; i < 100; ++i) {
-        for (int j = 0; j < 100; ++j) {
-            addToppingPos[i][j] = 0;
-        }
-    }
+//    for (int i=0; i<100; i++) {
+//        addToppingPos[i][0]=0;
+//        addToppingPos[i][1]=0;
+//    }
+    addToppingPosX = CCArray::create();
+    CC_SAFE_RETAIN(addToppingPosX);
+    addToppingPosY = CCArray::create();
+    CC_SAFE_RETAIN(addToppingPosY);
+    addTop = CCArray::create();
+    CC_SAFE_RETAIN(addTop);
 }
 
 void PizzaManager::selectPizzaTopping(int topIndex){
@@ -46,13 +48,16 @@ void PizzaManager::selectPizzaTopping(int topIndex){
 
 
 void PizzaManager::addPizzaTopping(int index){
-    addTop[selectedTop] = index ;
+//    addTop[selectedTop] = index ;
+    addTop->addObject(CCInteger::create(index));
 }
 
 
-void PizzaManager::addTopPos(int index,int indexs){
-    addToppingPos[selectedTopPos][0] = index;
-    addToppingPos[selectedTopPos][1] = indexs;
+void PizzaManager::addTopPos(float index,float indexs){
+//    addToppingPos[selectedTopPos][0] = index;
+//    addToppingPos[selectedTopPos][1] = indexs;
+    addToppingPosX->addObject(CCFloat::create(index));
+    addToppingPosY->addObject(CCFloat::create(indexs));
 }
 
 
@@ -64,15 +69,16 @@ void PizzaManager::cleanAllSprite(){
     for (int i=0; i<10; i++) {
         topping[i]=99;
     }
-    
-    for (int i=0; i<100; i++) {
-        addTop[i]=55;
+    if (addTop!=NULL) {
+        addTop->removeAllObjects();
+    }
+    if (addToppingPosX!=NULL) {
+        addToppingPosX->removeAllObjects();
+    }
+    if (addToppingPosY!=NULL) {
+        addToppingPosY->removeAllObjects();
     }
     
-    for (int i=0; i<100; i++) {
-        addToppingPos[i][0]=0;
-        addToppingPos[i][1]=0;
-    }
     
     tomatoSelected = false;
     xilanhuaSelected =false;
@@ -84,4 +90,19 @@ void PizzaManager::cleanAllSprite(){
     meatSelected = false;
     baconsSelected = false;
     bocaiSelected = false;
+}
+
+
+void PizzaManager::cleanTopping(){
+    selectedTopPos=0;
+    selectedTop=0;
+    if (addTop!=NULL) {
+        addTop->removeAllObjects();
+    }
+    if (addToppingPosX!=NULL) {
+        addToppingPosX->removeAllObjects();
+    }
+    if (addToppingPosY!=NULL) {
+        addToppingPosY->removeAllObjects();
+    }
 }

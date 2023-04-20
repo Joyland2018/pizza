@@ -28,7 +28,7 @@ public:
     virtual void ccTouchesBegan(CCSet *pTouches,CCEvent *pEvent);
     virtual void ccTouchesMoved(CCSet *pTouches,CCEvent *pEvent);
     virtual void ccTouchesEnded(CCSet *pTouches,CCEvent *pEvent);
-    CCSprite* pizzaTop=NULL;
+    CCSprite* pizzaTop;
     void showTopping();
     
     void showFlower();
@@ -49,18 +49,19 @@ public:
     void collectCoinMusic();
     void removeNormalSprite(CCObject* pSender);
     void gameComplate();
-    int x_x=0;
+    int x_x;
     
-    int x_y=0;
-    int rect_x=0;
-    int yuan_x=0;
-    int heart_x=0;
+    int x_y;
+    int rect_x;
+    int yuan_x;
+    int heart_x;
     
-    int topXdis=0;
+    int topXdis;
     
-    CCSprite* board = NULL;
+    CCSprite* board;
     
     bool backClick;
+    bool clickNext;
     
     void clickBack();
     

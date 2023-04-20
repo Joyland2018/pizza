@@ -16,6 +16,7 @@
 //#include "DeviceManager.h"
 
 
+
 using namespace CocosDenshion;
 
 enum{
@@ -54,9 +55,18 @@ bool AddTopping::init(){
     if (!CCLayer::init()) {
         return false;
     }
+    newTop = NULL;
+    addTopping = false;
     
+    clickNext = false;
     backClick=false;
     selectTop=false;
+    board=NULL;
+    pizzaShape=NULL;
+    
+    iphoneXoffsetX = 0.0f;
+    
+//    curPizza = PizzaManager::sharedManager()->whichPizza;
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("pizza/animate/pick.plist");
     center = GameManager::sharedManager()->getCenter();
     CCPoint leftTop = GameManager::sharedManager()->getLeftTopPos();
@@ -67,13 +77,14 @@ bool AddTopping::init(){
     this->addChild(bg);
     if(GameManager::sharedManager()->isIphoneX()){
         bg->setScale(1.3);
+        iphoneXoffsetX = 100.0f;
     }
     
     
-    
-    if (GameManager::sharedManager()->isAndroidPad()) {
-        ipadX=-50;
-    }
+
+   if (GameManager::sharedManager()->isAndroidPad()) {
+       ipadX=-50;
+   }
     
     CCSprite* back = CCSprite::create("background/back.png");
     back->setPosition(ccp(leftTop.x+50,leftTop.y-50));
@@ -83,7 +94,7 @@ bool AddTopping::init(){
     CCSprite* next = CCSprite::create("background/next.png");
     next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
     next->setTag(kNextTag);
-    this->addChild(next,1);
+    this->addChild(next,99);
     
     board = CCScale9Sprite::create("background/toppings-board.png");
 //    board->setPosition(ccp(center.x, center.y-210));
@@ -108,18 +119,14 @@ bool AddTopping::init(){
         this->christmasTopping();
     }
     
-    if (GameManager::sharedManager()->isAndroidPad()) {
-        x_x = 80;
-    }
+//    if (DeviceManager::sharedManager()->getIsPad()) {
+//        x_x = 80;
+//    }
     
 //    if(GameManager::sharedManager()->firstPlayPizza){
 //        this->playGuaid();
 //    }
 //    this->showPizza();
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
-    }
-
     this->scheduleOnce(schedule_selector(AddTopping::showPizza), 0.4);
     this->setTouchEnabled(true);
     return true;
@@ -128,80 +135,90 @@ bool AddTopping::init(){
 void AddTopping::playGuaid(){
     //手势
     CCSprite* bakeMachine = (CCSprite*)this->getChildByTag(kNextTag);
-    CCSprite* finger = CCSprite::createWithSpriteFrameName("touch0.png");
-    finger->setPosition(ccp(bakeMachine->getPosition().x+bakeMachine->getContentSize().width/2, bakeMachine->getPosition().y-bakeMachine->getContentSize().height/2));
-    finger->setTag(kGuard);
-    finger->setScale(0.5);
-    finger->runAction(CCFadeIn::create(0.3));
-    this->addChild(finger,10);
-    this->schedule(schedule_selector(BakedPizza::guardAction),1.0f);
+    if (bakeMachine!=NULL) {
+        CCSprite* finger = CCSprite::createWithSpriteFrameName("touch0.png");
+        finger->setPosition(ccp(bakeMachine->getPosition().x+bakeMachine->getContentSize().width/2, bakeMachine->getPosition().y-bakeMachine->getContentSize().height/2));
+        finger->setTag(kGuard);
+        finger->setScale(0.5);
+        finger->runAction(CCFadeIn::create(0.3));
+        this->addChild(finger,10);
+        this->schedule(schedule_selector(BakedPizza::guardAction),1.0f);
+    }
+
 }
 
 void AddTopping::guardAction(){
     CCSprite* finger=(CCSprite*)this->getChildByTag(kGuard);
-    CCArray* frame = CCArray::create();
-    for (int m =0; m<2; m++) {
-        CCString *name = CCString::createWithFormat("touch%d.png",m);
-        frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+    if (finger!=NULL) {
+        CCArray* frame = CCArray::create();
+        for (int m =0; m<2; m++) {
+            CCString *name = CCString::createWithFormat("touch%d.png",m);
+            frame->addObject(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString()));
+        }
+            CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
+            animation->setDelayPerUnit(0.3f);
+            CCAnimate *animate = CCAnimate::create(animation);
+    //    if(!GameManager::sharedManager()->firstPlay){
+            finger->runAction(animate);
     }
-        CCAnimation *animation = CCAnimation::createWithSpriteFrames(frame);
-        animation->setDelayPerUnit(0.3f);
-        CCAnimate *animate = CCAnimate::create(animation);
-//    if(!GameManager::sharedManager()->firstPlay){
-        finger->runAction(animate);
+
 //    }
         
 }
 
 void AddTopping::showPizza(){
      CCLog("---%d---",PizzaManager::sharedManager()->whichShape);
-    const char* file = "";
-//    PizzaManager::sharedManager()->whichShape=1;
-    if (PizzaManager::sharedManager()->whichShape==1) {
-        if (PizzaManager::sharedManager()->whichPizza==2) {
-            file ="candy_heart";
-        }else if (PizzaManager::sharedManager()->whichPizza==4) {
-            file ="halloween_heart";
-        }else if (PizzaManager::sharedManager()->whichPizza==6) {
-            file ="christmas_heart";
-        }else{
-            file ="heartPizza";
+    if (pizzaShape==NULL) {
+        const char* file = "";
+    //    PizzaManager::sharedManager()->whichShape=1;
+        if (PizzaManager::sharedManager()->whichShape==1) {
+            if (PizzaManager::sharedManager()->whichPizza==2) {
+                file ="candy_heart";
+            }else if (PizzaManager::sharedManager()->whichPizza==4) {
+                file ="halloween_heart";
+            }else if (PizzaManager::sharedManager()->whichPizza==6) {
+                file ="christmas_heart";
+            }else{
+                file ="heartPizza";
+            }
+            
+    //        pizzaShape = CCSprite::create("pizza/element/heartPizza.png");
+        }else if (PizzaManager::sharedManager()->whichShape==3) {
+            if (PizzaManager::sharedManager()->whichPizza==2) {
+                file ="candy_equal";
+            }else if (PizzaManager::sharedManager()->whichPizza==4) {
+                file ="halloween_equal";
+            }else if (PizzaManager::sharedManager()->whichPizza==6) {
+                file ="christmas_equal";
+            }else{
+                file ="equalPizza";
+            }
+    //        pizzaShape = CCSprite::create("pizza/element/equalPizza.png");
+        }else if (PizzaManager::sharedManager()->whichShape==2) {
+            if (PizzaManager::sharedManager()->whichPizza==2) {
+                file ="candy_rect";
+            }else if (PizzaManager::sharedManager()->whichPizza==4) {
+                file ="halloween_rect";
+            }else if (PizzaManager::sharedManager()->whichPizza==6) {
+                file ="christmas_rect";
+            }else{
+                file ="rectPizza";
+            }
+    //        pizzaShape = CCSprite::create("pizza/element/rectPizza.png");
         }
+
+        pizzaShape = CCSprite::create(CCString::createWithFormat("pizza/element/%s.png",file)->getCString());
+    //    pizzaShape->setScale(0.7);
+        pizzaShape->setTag(kPizzaTag);
+    //    pizzaShape->setPosition(ccp(center.x, center.y+800));
+        pizzaShape->setPosition(ccp(center.x-150, center.y-30));
+    //    pizzaShape->setScale(1.2);
         
-//        pizzaShape = CCSprite::create("pizza/element/heartPizza.png");
-    }else if (PizzaManager::sharedManager()->whichShape==3) {
-        if (PizzaManager::sharedManager()->whichPizza==2) {
-            file ="candy_equal";
-        }else if (PizzaManager::sharedManager()->whichPizza==4) {
-            file ="halloween_equal";
-        }else if (PizzaManager::sharedManager()->whichPizza==6) {
-            file ="christmas_equal";
-        }else{
-            file ="equalPizza";
-        }
-//        pizzaShape = CCSprite::create("pizza/element/equalPizza.png");
-    }else if (PizzaManager::sharedManager()->whichShape==2) {
-        if (PizzaManager::sharedManager()->whichPizza==2) {
-            file ="candy_rect";
-        }else if (PizzaManager::sharedManager()->whichPizza==4) {
-            file ="halloween_rect";
-        }else if (PizzaManager::sharedManager()->whichPizza==6) {
-            file ="christmas_rect";
-        }else{
-            file ="rectPizza";
-        }
-//        pizzaShape = CCSprite::create("pizza/element/rectPizza.png");
+    //    pizzaShape->runAction(CCEaseIn::create(CCMoveTo::create(0.33, ccp(center.x, center.y+50)), 0.3));
+        this->addChild(pizzaShape,9);
+        SimpleAudioEngine::sharedEngine()->playEffect("mp3/movein.wav");
     }
-    pizzaShape = CCSprite::create(CCString::createWithFormat("pizza/element/%s.png",file)->getCString());
-//    pizzaShape->setScale(0.7);
-    pizzaShape->setTag(kPizzaTag);
-//    pizzaShape->setPosition(ccp(center.x, center.y+800));
-    pizzaShape->setPosition(ccp(center.x-150, center.y-30));
-//    pizzaShape->setScale(1.2);
-    
-//    pizzaShape->runAction(CCEaseIn::create(CCMoveTo::create(0.33, ccp(center.x, center.y+50)), 0.3));
-    this->addChild(pizzaShape,9);
-    SimpleAudioEngine::sharedEngine()->playEffect("mp3/movein.wav");
+
 }
 
 void AddTopping::candyTopping(){
@@ -250,9 +267,11 @@ void AddTopping::candyTopping(){
         top->setTag(kTopping+i);
         if (GameManager::sharedManager()->isIphoneX()) {
             top->setScale(1.0);
-        }else if(GameManager::sharedManager()->isAndroidPad()){
+        }
+       else if(GameManager::sharedManager()->isAndroidPad()){
             top->setScale(1.1);
-        }else{
+        }
+        else{
             top->setScale(1.0);
         }
 //        containerLayer->addChild(top);
@@ -265,7 +284,10 @@ void AddTopping::candyTopping(){
             row++;
         }
     }
-    board->setContentSize(CCSize(500,320));
+    if (board!=NULL) {
+        board->setContentSize(CCSize(500,320));
+    }
+    
 //    board->setScaleY(2.2);
 //    if(!haveMovedScroll){
 //        CCPoint beginPos=containerLayer->getPosition();
@@ -322,9 +344,11 @@ void AddTopping::halloweenTopping(){
         top->setTag(kTopping+i);
         if (GameManager::sharedManager()->isIphoneX()) {
             top->setScale(1.0);
-        }else if(GameManager::sharedManager()->isAndroidPad()){
+        }
+        else if(GameManager::sharedManager()->isAndroidPad()){
             top->setScale(1.1);
-        }else{
+        }
+        else{
             top->setScale(1.0);
         }
 //        containerLayer->addChild(top);
@@ -336,7 +360,10 @@ void AddTopping::halloweenTopping(){
             row++;
         }
     }
-    board->setContentSize(CCSize(400,320));
+    if (board!=NULL) {
+        board->setContentSize(CCSize(400,320));
+    }
+    
 //    if(!haveMovedScroll){
 //        CCPoint beginPos=containerLayer->getPosition();
 //        containerLayer->runAction(CCSequence::create(CCDelayTime::create(0.5),
@@ -404,7 +431,10 @@ void AddTopping::christmasTopping(){
             row++;
         }
     }
-    board->setContentSize(CCSize(500,320));
+    if (board!=NULL) {
+        board->setContentSize(CCSize(500,320));
+    }
+    
 //    if(!haveMovedScroll){
 //        CCPoint beginPos=containerLayer->getPosition();
 //        containerLayer->runAction(CCSequence::create(CCDelayTime::create(0.5),
@@ -520,16 +550,20 @@ void AddTopping::showTopping(){
             row++;
         }
     }
-    if (PizzaManager::sharedManager()->selectedNum < 5) {
-        board->setContentSize(CCSize(500,160));
-    }else if (PizzaManager::sharedManager()->selectedNum < 7) {
-        board->setContentSize(CCSize(400,320));
-    }else if (PizzaManager::sharedManager()->selectedNum < 10) {
-        board->setContentSize(CCSize(500,320));
-    }else if (PizzaManager::sharedManager()->selectedNum==10) {
-        board->setContentSize(CCSize(580,320));
-//        board->setScale(0.9);
+    
+    if (board!=NULL) {
+        if (PizzaManager::sharedManager()->selectedNum < 5) {
+            board->setContentSize(CCSize(500,160));
+        }else if (PizzaManager::sharedManager()->selectedNum < 7) {
+            board->setContentSize(CCSize(400,320));
+        }else if (PizzaManager::sharedManager()->selectedNum < 9) {
+            board->setContentSize(CCSize(500,320));
+        }else if (PizzaManager::sharedManager()->selectedNum<=10) {
+            board->setContentSize(CCSize(580,320));
+    //        board->setScale(0.9);
+        }
     }
+
     
 //    if(!haveMovedScroll){
 //        CCPoint beginPos=containerLayer->getPosition();
@@ -562,7 +596,10 @@ void AddTopping::showPepperTopping(){
 //    }
 //    top->setScale(0.8);
     this->addChild(top,11);
-    board->setContentSize(CCSize(500,160));
+    if (board!=NULL) {
+        board->setContentSize(CCSize(500,160));
+    }
+    
 }
 
 
@@ -579,7 +616,10 @@ void AddTopping::showHawaiiTopping(){
         top->setScale(1.0);
     }
     this->addChild(top,11);
-    board->setContentSize(CCSize(500,160));
+    if (board!=NULL) {
+        board->setContentSize(CCSize(500,160));
+    }
+    
 }
 
 void AddTopping::showVegTopping(){
@@ -601,7 +641,10 @@ void AddTopping::showMoreCheeseTopping(){
     top->setTag(kMoreCheeseTag);
     top->setScale(0.7);
     this->addChild(top,11);
-    board->setContentSize(CCSize(500,160));
+    if (board!=NULL) {
+        board->setContentSize(CCSize(500,160));
+    }
+    
 }
 
 void AddTopping::scrollViewDidScroll(extension::CCScrollView *view){
@@ -633,10 +676,11 @@ void AddTopping::clickBack(){
     }
 }
 
-void AddTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
+bool AddTopping::ccTouchBegan(cocos2d::CCTouch *touch, cocos2d::CCEvent *event){
 //    showTop=false;
-    CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());  //一个触摸的对象
-    CCPoint location = CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView()) ;//触摸点在这个场景的位置
+//    CCTouch *pTouch = (CCTouch*)(touch->anyObject());  //一个触摸的对象
+    CCPoint location = touch->getLocationInView();
+    location = CCDirector::sharedDirector()->convertToGL(location);//触摸点在这个场景的位置
     beginTouchX = PizzaManager::sharedManager()->xDispostion;
     beginPosY =location.y;
     beginPosX = location.x;
@@ -644,10 +688,8 @@ void AddTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
 //    this->unschedule(schedule_selector(BakedPizza::guardAction));
 //    this->removeChildByTag(kGuard);
-    if (next !=NULL && next->boundingBox().containsPoint(location)) {
-        if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-            GameManager::sharedManager()->showInterstitial();
-        }
+    if (next !=NULL && next->boundingBox().containsPoint(location) && clickNext==false) {
+        clickNext = true;
         SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
         goNext();
 //        CCUserDefault::sharedUserDefault()->setBoolForKey("isFirstPizza", false);
@@ -668,11 +710,16 @@ void AddTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
         PizzaManager::sharedManager()->cleanAllSprite();
         
     }
-//    CCLog("----%d----",PizzaManager::sharedManager()->whichPizza);
+   
 //    if (abs(xDis)<20 && abs(xDis)!=0) {
 //
 //    }
-//    if (showTop) {
+//    if (PizzaManager::sharedManager()->whichPizza>9 || PizzaManager::sharedManager()->whichPizza<0) {
+//        PizzaManager::sharedManager()->whichPizza = curPizza;
+//    }
+    
+    CCLog("----点击%d----",PizzaManager::sharedManager()->whichPizza);
+    if (newTop==NULL) {
         if(PizzaManager::sharedManager()->whichPizza == 3){
             CCSprite* cheese = (CCSprite*)this->getChildByTag(kMoreCheeseTag);
             if (cheese != NULL && cheese->boundingBox().containsPoint(location) && selectTop==false) {
@@ -803,40 +850,47 @@ void AddTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
                 }
             }
         }
-//    }
-    
+    }
+    return true;
     
 }
 
-void AddTopping::ccTouchesMoved(CCSet *pTouches, CCEvent *pEvent){
-    CCTouch *pTouch = (CCTouch*)pTouches->anyObject();
-    CCPoint location = CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
+void AddTopping::ccTouchMoved(cocos2d::CCTouch* touch, cocos2d::CCEvent* event){
+    CCPoint location = touch->getLocationInView();
+    location = CCDirector::sharedDirector()->convertToGL(location);//触摸点在这个场景的位置
+    CCPoint lastPoint = touch->getPreviousLocationInView();
+    lastPoint = CCDirector::sharedDirector()->convertToGL(lastPoint);
     endPosY = location.y;
     endPosX = location.x;
     int yDis = endPosY - beginPosY;
     int xDisp = endPosX - beginPosX;
+    int xmoveDisp = endPosX - lastPoint.x;
 //    if (abs(yDis)>=10) {
 //        showTop=true;
 //    }
-    if (abs(yDis)>=10 &&  selectTop) {
+    if (abs(xDisp)>=20 &&  selectTop) {
 //        showTop=true;
-        if(newTop){
+        if(newTop!=NULL){
+            CCLOG("---横坐标%f---",location.x);
+            CCLOG("---纵坐标%f---",location.y);
 //            CCLog("----移动了----");
             newTop->setPosition(location);
         }
     }
 }
 
-void AddTopping::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
-    CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());
-    CCPoint location = CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
+void AddTopping::ccTouchEnded(cocos2d::CCTouch* touch, cocos2d::CCEvent* event){
+    CCPoint location = touch->getLocationInView();
+    location = CCDirector::sharedDirector()->convertToGL(location);//触摸点在这个场景的位置
     CCSprite* pizza = (CCSprite*)this->getChildByTag(kPizzaTag);
     CCPoint topPos = pizza->convertToNodeSpace(location);
     endTouchX = PizzaManager::sharedManager()->xDispostion;
     xDis = endTouchX-beginTouchX;
+    endPosX = location.x;
+    int xDisp = endPosX - beginPosX;
     if (abs(xDis)<10 && selectTop) {
-        if (newTop) {
-            CCLog("----停止触摸----");
+        if (newTop != NULL) {
+//            CCLog("----停止触摸----");
             int xDis=0;
             int yDis=0;
             int yDist1=0;
@@ -857,7 +911,11 @@ void AddTopping::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
                 yDist1=40;
                 yDist2=80;
             }else if(PizzaManager::sharedManager()->whichShape==2){
-                storeWidth = 320;
+                if (GameManager::sharedManager()->isIphoneX()) {
+                    storeWidth = 320;
+                }else{
+                    storeWidth = 320;
+                }
                 storeHeight = 201;
             }else if(PizzaManager::sharedManager()->whichShape==3){
                 storeWidth = 240;
@@ -894,24 +952,38 @@ void AddTopping::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
             if (PizzaManager::sharedManager()->whichShape==1) {
                 CCLog("----圆形pizza----");
                 if (rect1.intersectsRect(rect2) || rect1.intersectsRect(rect3) || rect1.intersectsRect(rect4) || rect1.intersectsRect(rect5) || rect1.intersectsRect(rect6)) {
-                    if (PizzaManager::sharedManager()->whichPizza == 0) {
-                        PizzaManager::sharedManager()->addPizzaTopping(9);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else if(PizzaManager::sharedManager()->whichPizza == 5){
-                        PizzaManager::sharedManager()->addPizzaTopping(5);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else if(PizzaManager::sharedManager()->whichPizza == 7 || PizzaManager::sharedManager()->whichPizza == 8){
-                        PizzaManager::sharedManager()->addPizzaTopping(PizzaManager::sharedManager()->topping[touchTopping]);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else {
-                        PizzaManager::sharedManager()->addPizzaTopping(touchTopping);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }
-                    newTop->setPosition(location);
+
                     
-                    PizzaManager::sharedManager()->addTopPos(topPos.x, topPos.y);
-                    PizzaManager::sharedManager()->selectedTopPos++;
-                    selectTop=false;
+                    if(location.x>(220+iphoneXoffsetX) && location.x<(640+iphoneXoffsetX) && location.y>130 && location.y<430){
+                        
+                        if (PizzaManager::sharedManager()->whichPizza == 0) {
+                            PizzaManager::sharedManager()->addPizzaTopping(9);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else if(PizzaManager::sharedManager()->whichPizza == 5){
+                            PizzaManager::sharedManager()->addPizzaTopping(5);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else if(PizzaManager::sharedManager()->whichPizza == 7 || PizzaManager::sharedManager()->whichPizza == 8){
+                            PizzaManager::sharedManager()->addPizzaTopping(PizzaManager::sharedManager()->topping[touchTopping]);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else {
+                            PizzaManager::sharedManager()->addPizzaTopping(touchTopping);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }
+                        newTop->setPosition(location);
+                        CCLOG("---心形移动距离%f---",abs(location.x-originalPosition.x));
+                        addTopping = true;
+                        PizzaManager::sharedManager()->addTopPos(topPos.x, topPos.y);
+                        PizzaManager::sharedManager()->selectedTopPos++;
+                        selectTop=false;
+                    }else{
+                        CCLog("----又点错了----");
+                        newTop->removeFromParentAndCleanup(true);
+                        addTopping = false;
+                        newTop=NULL;
+                        selectTop=false;
+                    }
+
+
     //                newTop=NULL;
     //                if (PizzaManager::sharedManager()->addTop[0] == 0) {
                         CCLog("----点错了----");
@@ -925,61 +997,85 @@ void AddTopping::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
                                     newTop->removeFromParentAndCleanup(true);
 //                                    CCLog("----%f----",originalPosition.x);
                     CCLog("----移出了----");
-                    //                newTop=NULL;
+                    addTopping = false;
+                                    newTop=NULL;
                                     selectTop=false;
                     //                return;
                                 }
             }else if(PizzaManager::sharedManager()->whichShape==3){
                 if (rect1.intersectsRect(rect2) || rect1.intersectsRect(rect3) || rect1.intersectsRect(rect4) || rect1.intersectsRect(rect5) || rect1.intersectsRect(rect6)) {
-                    if (PizzaManager::sharedManager()->whichPizza == 0) {
-                        PizzaManager::sharedManager()->addPizzaTopping(9);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else if(PizzaManager::sharedManager()->whichPizza == 5){
-                        PizzaManager::sharedManager()->addPizzaTopping(5);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else if(PizzaManager::sharedManager()->whichPizza ==7 || PizzaManager::sharedManager()->whichPizza ==8){
-                        PizzaManager::sharedManager()->addPizzaTopping(PizzaManager::sharedManager()->topping[touchTopping]);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else {
-                        PizzaManager::sharedManager()->addPizzaTopping(touchTopping);
-                        PizzaManager::sharedManager()->selectedTop++;
+
+//                    CCLOG("---移动距离%f---",abs(location.x-originalPosition.x));
+//                    CCLOG("---横坐标%f---",location.x);
+//                    CCLOG("---纵坐标%f---",location.y);
+                    if(location.x>(230+iphoneXoffsetX) && location.x<(610+iphoneXoffsetX) && location.y>115 && location.y<480){
+                        if (PizzaManager::sharedManager()->whichPizza == 0) {
+                            PizzaManager::sharedManager()->addPizzaTopping(9);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else if(PizzaManager::sharedManager()->whichPizza == 5){
+                            PizzaManager::sharedManager()->addPizzaTopping(5);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else if(PizzaManager::sharedManager()->whichPizza ==7 || PizzaManager::sharedManager()->whichPizza ==8){
+                            PizzaManager::sharedManager()->addPizzaTopping(PizzaManager::sharedManager()->topping[touchTopping]);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else {
+                            PizzaManager::sharedManager()->addPizzaTopping(touchTopping);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }
+                        newTop->setPosition(location);
+                        CCLOG("---圆形移动距离%f---",abs(location.x-originalPosition.x));
+                        addTopping = true;
+                        PizzaManager::sharedManager()->addTopPos(topPos.x, topPos.y);
+                        PizzaManager::sharedManager()->selectedTopPos++;
+                        selectTop=false;
+                    }else{
+                        newTop->removeFromParentAndCleanup(true);
+                        addTopping = false;
+                        newTop=NULL;
+                        selectTop=false;
                     }
-                    newTop->setPosition(location);
                     
-                    PizzaManager::sharedManager()->addTopPos(topPos.x, topPos.y);
-                    PizzaManager::sharedManager()->selectedTopPos++;
-                    selectTop=false;
                 }else{
                     //                newTop->runAction(CCMoveTo::create(0.2, originalPosition));
 //                                    newTop->runAction(CCSequence::create(CCMoveTo::create(0.2, originalPosition),
 //                                                                         CCRemoveSelf::create(),
 //                                                                         NULL));
-                                    newTop->removeFromParentAndCleanup(true);
-                                    CCLog("----%f----",originalPosition.x);
-                    //                newTop=NULL;
-                                    selectTop=false;
+                    newTop->removeFromParentAndCleanup(true);
+                    CCLog("----%f----",originalPosition.x);
+                                    newTop=NULL;
+                    addTopping = false;
+                    selectTop=false;
                     //                return;
                                 }
             }else{
                 if (rect1.intersectsRect(rect2)) {
-                    if (PizzaManager::sharedManager()->whichPizza == 0) {
-                        PizzaManager::sharedManager()->addPizzaTopping(9);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else if(PizzaManager::sharedManager()->whichPizza == 5){
-                        PizzaManager::sharedManager()->addPizzaTopping(5);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else if(PizzaManager::sharedManager()->whichPizza ==7 || PizzaManager::sharedManager()->whichPizza ==8){
-                        PizzaManager::sharedManager()->addPizzaTopping(PizzaManager::sharedManager()->topping[touchTopping]);
-                        PizzaManager::sharedManager()->selectedTop++;
-                    }else {
-                        PizzaManager::sharedManager()->addPizzaTopping(touchTopping);
-                        PizzaManager::sharedManager()->selectedTop++;
+
+                    if(location.x>(220+iphoneXoffsetX) && location.x<(620+iphoneXoffsetX) && location.y>160 && location.y<460){
+                        if (PizzaManager::sharedManager()->whichPizza == 0) {
+                            PizzaManager::sharedManager()->addPizzaTopping(9);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else if(PizzaManager::sharedManager()->whichPizza == 5){
+                            PizzaManager::sharedManager()->addPizzaTopping(5);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else if(PizzaManager::sharedManager()->whichPizza ==7 || PizzaManager::sharedManager()->whichPizza ==8){
+                            PizzaManager::sharedManager()->addPizzaTopping(PizzaManager::sharedManager()->topping[touchTopping]);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }else {
+                            PizzaManager::sharedManager()->addPizzaTopping(touchTopping);
+                            PizzaManager::sharedManager()->selectedTop++;
+                        }
+                        newTop->setPosition(location);
+                        CCLOG("---方形移动距离%f---",abs(location.x-originalPosition.x));
+                        PizzaManager::sharedManager()->addTopPos(topPos.x, topPos.y);
+                        PizzaManager::sharedManager()->selectedTopPos++;
+                        selectTop=false;
+                        addTopping = true;
+                    }else{
+                        newTop->removeFromParentAndCleanup(true);
+                        addTopping = false;
+                        newTop=NULL;
+                        selectTop=false;
                     }
-                    newTop->setPosition(location);
-                    
-                    PizzaManager::sharedManager()->addTopPos(topPos.x, topPos.y);
-                    PizzaManager::sharedManager()->selectedTopPos++;
-                    selectTop=false;
     //                newTop=NULL;
     //                if (PizzaManager::sharedManager()->addTop[0] == 0) {
     //                    CCLog("----xuan----");
@@ -992,24 +1088,44 @@ void AddTopping::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent){
 //                                                         NULL));
                     newTop->removeFromParentAndCleanup(true);
                     CCLog("----%f----",originalPosition.x);
-    //                newTop=NULL;
+                    newTop=NULL;
+                    addTopping = false;
                     selectTop=false;
     //                return;
                 }
             }
 
-
+//            if (newTop!=NULL) {
+//                newTop->removeFromParentAndCleanup(true);
+//                newTop=NULL;
+//            }
+            
         }
 
+//    }else if (newTop!=NULL) {
+//        newTop=NULL;
     }
 //    if (PizzaManager::sharedManager()->whichPizza == 7 || PizzaManager::sharedManager()->whichPizza == 8){
 ////        scrollView->setTouchEnabled(true);
 //    }
-
+    if (newTop!=NULL) {
+        if(addTopping==false){
+            newTop->removeFromParentAndCleanup(true);
+        }
+        newTop=NULL;
+    }
+    
     showTop=false;
 }
-
+void AddTopping::ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent)
+{
+}
 
 CCRect AddTopping::createRectByPoint(CCPoint point, float width, float height){
     return CCRectMake(point.x-width/2,point.y-height/2,width,height);       //CCRectMake(x,y,width,height)；x,矩形左下角x坐标；y，矩形左下角y坐标；width，矩形宽度；height，矩形高度
+}
+
+
+void AddTopping::registerWithTouchDispatcher(){
+    CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(this, 0, false);
 }

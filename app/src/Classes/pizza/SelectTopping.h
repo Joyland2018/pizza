@@ -37,11 +37,16 @@ public:
     void showTopping();
     void showVegTopping();
     void showDone();
+    
+    void goNext();
+    
     CCSprite* select = NULL;
     int selectTopNum=0;
     int selectedTop=99;
     int x_x=0;
     bool clickBack;
+    bool clickNext;
+    
     void clickToBack();
     CREATE_FUNC(SelectTopping);
 };

@@ -59,48 +59,50 @@ public:
     void potActoion();
     
     
-    bool touchedMilk=false;
-    bool fireOn = false;
+    bool touchedMilk;
+    bool fireOn;
     
-    bool canStri = false;
+    bool canStri;
     
     
-    int newSpriteIndex=0;
-    int rotation=0;
-    int originRotation=0;
-    int sauceIndex=0;
+    int newSpriteIndex;
+    int rotation;
+    int originRotation;
+    int sauceIndex;
     
-    int newSpriteTag=0;
+    int newSpriteTag;
     
-    int beginPos=0;
-    int endPos=0;
+    int beginPos;
+    int endPos;
     
     CCRect createRectByPoint(CCPoint point,float width,float height);
     CCPoint originPos;
-    int milkIndex=0;
+    int milkIndex;
     
-    int MaterialIndex=0;
+    int MaterialIndex;
     
-    CCSprite* touchSprite= NULL;
+    CCSprite* touchSprite;
     
-    CCSprite* touchSpoon = NULL;
+    CCSprite* touchSpoon;
     
-    bool subStir=false;
-    bool addStir = false;
-    bool stirNum = false;
-    bool touchOther = false;
+    bool subStir;
+    bool addStir;
+    bool stirNum ;
+    bool touchOther;
     
-    int whichMaterial=0;
+    int whichMaterial;
     
     CCPoint center;
-    int touchIndex=0;
-    bool touchMilk = false;
+    int touchIndex;
+    bool touchMilk;
 //    bool addAllMaterial = false;
-    const char* fileName="";
+    const char* fileName;
     
-    int cutNum=1;
+    int cutNum;
     
     bool backClick;
+    
+    bool clickNext;
     
     void clickBack();
     CREATE_FUNC(MakeSauce);

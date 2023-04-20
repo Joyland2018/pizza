@@ -33,6 +33,8 @@ import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
@@ -119,11 +121,11 @@ public class JoyPreschool extends Cocos2dxActivity implements PurchasesUpdatedLi
 //
     public AdManager mAdManager;
     public IAPManager mIAPManager;
-    public SkuDetails allLifetimeSkuDetails;
+    public ProductDetails allLifetimeSkuDetails;
     public int connectFailCount = 0;
     public int connectErrorCount = 0;
     public BillingClientStateListener billingClientStateListener;
-    public SkuDetailsResponseListener skuDetailsResponseListener;
+    public ProductDetailsResponseListener skuDetailsResponseListener;
 //    // Provides purchase notification while this app is running
 //    IabBroadcastReceiver mBroadcastReceiver;
     // Does the user have an active subscription to the infinite gas plan?
@@ -507,14 +509,14 @@ public class JoyPreschool extends Cocos2dxActivity implements PurchasesUpdatedLi
 //                    }
 //                }
 
-                mIAPManager.queryPurchaseList(BillingClient.SkuType.INAPP, new PurchasesResponseListener() {
+                mIAPManager.queryPurchaseList(BillingClient.ProductType.INAPP, new PurchasesResponseListener() {
                     @Override
                     public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List<Purchase> list) {
                         List<Purchase> inAppPurchaseList = list;
                         if (inAppPurchaseList != null){
                             for (Purchase inAppPurchase : inAppPurchaseList){
 //                  5      if (inAppPurchase != null && (inAppPurchase.getSku().equals(IAPManager.ALL_LIFETIME_PRODUCT) || inAppPurchase.getSku().equals(IAPManager.FLASH_SALE_PRODUCT))){
-                                if (inAppPurchase != null && (IAPManager.ALL_LIFETIME_PRODUCT.equals(inAppPurchase.getSkus().get(0)))){
+                                if (inAppPurchase != null && (IAPManager.ALL_LIFETIME_PRODUCT.equals(inAppPurchase.getProducts().get(0)))){
 
                                     if (!inAppPurchase.isAcknowledged()){
                                         mIAPManager.handlePurchase(inAppPurchase,acknowledgePurchaseResponseListener);
@@ -614,7 +616,6 @@ public class JoyPreschool extends Cocos2dxActivity implements PurchasesUpdatedLi
 //                skuList.add(IAPManager.NO_ADS_PRODUCT);
 //                skuList.add(IAPManager.SUB_PRIME_PRODUCT);
 //                skuList.add(IAPManager.SUB_MEMBER_PRODUCT);
-            List<String> subscripList = new ArrayList<>();
 
             skuList.add(IAPManager.ALL_LIFETIME_PRODUCT);
 //            skuList.add(IAPManager.FLASH_SALE_PRODUCT);
@@ -624,22 +625,15 @@ public class JoyPreschool extends Cocos2dxActivity implements PurchasesUpdatedLi
             if (skuDetailsResponseListener != null) {
                 skuDetailsResponseListener = null;
             }
-            skuDetailsResponseListener = new SkuDetailsResponseListener() {
+            skuDetailsResponseListener = new ProductDetailsResponseListener() {
                 @Override
-                public void onSkuDetailsResponse(BillingResult billingResult, List<SkuDetails> skuDetailsList) {
-                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
-                        for (SkuDetails skuDetails : skuDetailsList) {
+                public void onProductDetailsResponse(@NonNull BillingResult billingResult, @NonNull List<ProductDetails> list) {
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
+                        for (ProductDetails skuDetails : list) {
                             if (skuDetails != null) {
-                                if (skuDetails.getSku().equals(IAPManager.ALL_LIFETIME_PRODUCT)) {
+                                if (skuDetails.getProductId().equals(IAPManager.ALL_LIFETIME_PRODUCT)) {
                                     allLifetimeSkuDetails = skuDetails;
-//                                } else if (skuDetails.getSku().equals(IAPManager.FLASH_SALE_PRODUCT)) {
-//                                    flashSaleSkuDetails = skuDetails;
                                 }
-//                                else if (skuDetails.getSku().equals(IAPManager.SUB_YEARLY_PRODUCT)) {
-//                                    yearlySkuDetails = skuDetails;
-//                                } else if (skuDetails.getSku().equals(IAPManager.SUB_MONTHLY_PRODUCT)) {
-//                                    monthlySkuDetails = skuDetails;
-//                                }
                             }
                         }
                     }else {
@@ -647,11 +641,11 @@ public class JoyPreschool extends Cocos2dxActivity implements PurchasesUpdatedLi
 //                            Toast.makeText(JoyPreschool.this,debugMsgStr,Toast.LENGTH_SHORT).show();
                         setMixpanelTrack(debugMsgStr,"");
                     }
+                    //  JoyPreschool.finishLoadedItemCallback(10);
                 }
             };
 
-            mIAPManager.querySkuDetails(skuList, BillingClient.SkuType.INAPP, skuDetailsResponseListener);
-//            mIAPManager.querySkuDetails(subscripList, BillingClient.SkuType.SUBS, skuDetailsResponseListener);
+            mIAPManager.querySkuDetails(skuList, BillingClient.ProductType.INAPP, skuDetailsResponseListener);
 
 
 //            }

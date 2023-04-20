@@ -12,6 +12,7 @@
 #include "CutTopping.h"
 #include "PizzaManager.h"
 #include "AddTopping.h"
+#include "BakedPizza.h"
 
 using namespace CocosDenshion;
 
@@ -22,6 +23,7 @@ enum{
     kDone1 = 2,
     kDone2 = 3,
     kSelectTag = 100,
+    kNextTag = 199,
 };
 
 CCScene* SelectTopping::scene(){
@@ -46,8 +48,9 @@ bool SelectTopping::init(){
     if (!CCLayer::init()) {
         return false;
     }
-    
+    selectTopNum=0;
     clickBack = false;
+    clickNext = false;
     center = GameManager::sharedManager()->getCenter();
     CCPoint leftTop = GameManager::sharedManager()->getLeftTopPos();
     CCPoint rightTop = GameManager::sharedManager()->getRightTopPos();
@@ -67,9 +70,7 @@ bool SelectTopping::init(){
     done->setTag(kDone);
     this->addChild(done);
     if (GameManager::sharedManager()->isIphoneX()) {
-        x_x=100;
-    }else if(GameManager::sharedManager()->isAndroidPad()){
-        x_x=-40;
+        x_x=120;
     }
     
     if (PizzaManager::sharedManager()->whichPizza==7) {
@@ -89,11 +90,11 @@ bool SelectTopping::init(){
 //    curallscores->setTag(100);
     curallscores->setPosition(ccp(visibleOrigin.x+visibleSize.width-70, visibleSize.height-50));
     this->addChild(curallscores,11);
-
-
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
-    }
+    
+    CCSprite* next = CCSprite::create("background/next.png");
+    next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
+    next->setTag(kNextTag);
+//    this->addChild(next);
     
     
     this->setTouchEnabled(true);
@@ -145,6 +146,7 @@ void SelectTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     CCTouch *pTouch = (CCTouch*)(pTouches->anyObject());
     CCPoint location=CCDirector::sharedDirector()->convertToGL(pTouch->getLocationInView());
     CCSprite* back = (CCSprite*)this->getChildByTag(kBack);
+    CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
     if (back!=NULL && back->boundingBox().containsPoint(location) && clickBack==false) {
 //        SimpleAudioEngine::sharedEngine()->playEffect("mp3/done.mp3");
         clickBack = true;
@@ -154,6 +156,12 @@ void SelectTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
         //            touchSprite = homeBtn;
         SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
         back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(SelectTopping::clickToBack))));
+//    }else if (next !=NULL && next->boundingBox().containsPoint(location) && clickNext == false) {
+////        submit=true;
+//        clickNext=true;
+//        CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+//        SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+//        next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(SelectTopping::goNext))));
     }
     for (int i = 0; i < 10; i++) {
             CCSprite* topping = (CCSprite*)this->getChildByTag(kTopping+i);
@@ -234,8 +242,9 @@ void SelectTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
                         submit=false;
                         this->showDone();
                         CCSprite* done = (CCSprite*)this->getChildByTag(kDone);
-                        done->setOpacity(1);
-                        
+                        if(done!=NULL){
+                            done->setOpacity(1);
+                        }
                     }else{
                         submit=true;
                     }
@@ -282,6 +291,85 @@ void SelectTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
                 CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, CutTopping::scene(), ccBLACK));
             }
         }
+}
+
+void SelectTopping::goNext(){
+//    if (selectTopNum==0) {
+////        if(PizzaManager::sharedManager()->whichPizza==7){
+////            PizzaManager::sharedManager()->tomatoSelected=true;
+////            PizzaManager::sharedManager()->xilanhuaSelected=true;
+////            PizzaManager::sharedManager()->ganlanyeSelected=true;
+////            PizzaManager::sharedManager()->moguSelected=true;
+////            PizzaManager::sharedManager()->pepperSelected=true;
+////            PizzaManager::sharedManager()->boluoSelected=true;
+////            PizzaManager::sharedManager()->bocaiSelected=true;
+////            PizzaManager::sharedManager()->selectedNum = 7;
+////            for (int i=0; i<7; i++) {
+////                PizzaManager::sharedManager()->topping[i] = i;
+////            }
+////        }else{
+////            PizzaManager::sharedManager()->tomatoSelected=true;
+////            PizzaManager::sharedManager()->xilanhuaSelected=true;
+////            PizzaManager::sharedManager()->ganlanyeSelected=true;
+////            PizzaManager::sharedManager()->moguSelected=true;
+////            PizzaManager::sharedManager()->pepperSelected=true;
+////            PizzaManager::sharedManager()->boluoSelected=true;
+////            PizzaManager::sharedManager()->bocaiSelected=true;
+////            PizzaManager::sharedManager()->baconsSelected=true;
+////            PizzaManager::sharedManager()->meatSelected=true;
+////            PizzaManager::sharedManager()->changSelected=true;
+////            PizzaManager::sharedManager()->selectedNum = 10;
+////            for (int i=0; i<10; i++) {
+////                PizzaManager::sharedManager()->topping[i] = i;
+////            }
+////        }
+//        CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, BakedPizza::scene(), ccBLACK));
+//    }else{
+//        CCSprite* done = (CCSprite*)this->getChildByTag(kDone);
+//        CCSprite* done2 = (CCSprite*)this->getChildByTag(kDone2);
+//        CCPoint pos = done->getPosition();
+//        CCSprite* done1 = CCSprite::create("pizza/element/submit.png");
+//        done1->setPosition(pos);
+//        done1->setTag(kDone1);
+//        if (done2) {
+//            done2->removeFromParentAndCleanup(true);
+//        }
+//        this->addChild(done1,2);
+//        done->setOpacity(0);
+//        if (selectTopNum==1 && selectedTop==2){
+//            selectTopNum=0;
+//            submit=false;
+//            CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, AddTopping::scene(), ccBLACK));
+//        }else{
+//            selectTopNum=0;
+//            submit=false;
+//            CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, CutTopping::scene(), ccBLACK));
+//        }
+//    }
+//
+//    
+////    if(submit){
+////        CCSprite* done = (CCSprite*)this->getChildByTag(kDone);
+////        CCSprite* done2 = (CCSprite*)this->getChildByTag(kDone2);
+////        CCPoint pos = done->getPosition();
+////        CCSprite* done1 = CCSprite::create("pizza/element/submit.png");
+////        done1->setPosition(pos);
+////        done1->setTag(kDone1);
+////        if (done2) {
+////            done2->removeFromParentAndCleanup(true);
+////        }
+////        this->addChild(done1,2);
+////        done->setOpacity(0);
+////        if (selectTopNum==1 && selectedTop==2){
+////            selectTopNum=0;
+////            submit=false;
+////            CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, AddTopping::scene(), ccBLACK));
+////        }else{
+////            selectTopNum=0;
+////            submit=false;
+////            CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5, CutTopping::scene(), ccBLACK));
+////        }
+////    }
 }
 
 void SelectTopping::showDone(){

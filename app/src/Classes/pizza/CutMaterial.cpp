@@ -42,6 +42,7 @@ enum{
     kPumpkin = 6,
     kOnion = 7,
     kGarlic = 8,
+    kNextTag = 199,
 };
 
 CCScene* CutMaterial::scene(){
@@ -66,6 +67,9 @@ bool CutMaterial::init(){
     if (!CCLayer::init()) {
         return false;
     }
+    backClick =false;
+    clickNext = false;
+    
     CCPoint visibleOrigin=CCDirector::sharedDirector()->getVisibleOrigin();
     CCSize visibleSize = CCDirector::sharedDirector()->getVisibleSize();
     center = GameManager::sharedManager()->getCenter();
@@ -104,7 +108,7 @@ bool CutMaterial::init(){
     CCSprite* money = CCSprite::create("background/money.png");
     money->setPosition(ccp(visibleOrigin.x+visibleSize.width-100, visibleSize.height-50));
 //    money->setTag(kMoney);
-    this->addChild(money,10);
+//    this->addChild(money,10);
     
     CCString* curscore = CCString::createWithFormat("%d",GameManager::sharedManager()->getCurrentCoin());
     const char* curscores = curscore->getCString();
@@ -112,16 +116,18 @@ bool CutMaterial::init(){
     curallscores->setColor(ccWHITE);
 //    curallscores->setTag(100);
     curallscores->setPosition(ccp(visibleOrigin.x+visibleSize.width-70, visibleSize.height-50));
-    this->addChild(curallscores,11);
+//    this->addChild(curallscores,11);
+    
+    CCSprite* next = CCSprite::create("background/next.png");
+    next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
+    next->setTag(kNextTag);
+    this->addChild(next);
+    
     
     if(GameManager::sharedManager()->firstPlayPizza){
         this->schedule(schedule_selector(CutMaterial::showFinger),1.5f);
     }
-
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
-    }
-
+    
     this->showTopping();
     return true;
 }
@@ -301,174 +307,195 @@ void CutMaterial::resetCutNum(){
 void CutMaterial::strawberryAction(int index){
     CCSprite* strawberry=(CCSprite*)this->getChildByTag(kStrawberry);
 //    if(sausage!=NULL && sausage->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (strawberry!=NULL) {
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("candy1_%d.png",index);
-        CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    if (sausageAction) {
-        strawberry->setDisplayFrame(sausageAction);
-    }
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            strawberry->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::noStrawberry)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
-                                                  CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutMaterial::candyMaterial2)),
-                                                 
-                                                  NULL));
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("candy1_%d.png",index);
+            CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+        if (sausageAction) {
+            strawberry->setDisplayFrame(sausageAction);
         }
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                strawberry->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::noStrawberry)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
+                                                      CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutMaterial::candyMaterial2)),
+                                                     
+                                                      NULL));
+            }
+    }
+
 }
 
 void CutMaterial::bananaAction(int index){
     CCSprite* banana=(CCSprite*)this->getChildByTag(kBanana);
 //    if(sausage!=NULL && sausage->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (banana!=NULL) {
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("candy2_%d.png",index);
-        CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    if (sausageAction) {
-        banana->setDisplayFrame(sausageAction);
-    }
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            banana->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::noBanana)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
-                                                  CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutMaterial::candyMaterial3)),
-                                                 
-                                                  NULL));
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("candy2_%d.png",index);
+            CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+        if (sausageAction) {
+            banana->setDisplayFrame(sausageAction);
         }
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                banana->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::noBanana)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
+                                                      CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutMaterial::candyMaterial3)),
+                                                     
+                                                      NULL));
+            }
+    }
+
 }
 
 void CutMaterial::beetAction(int index){
     CCSprite* beet=(CCSprite*)this->getChildByTag(kBeet);
 //    if(sausage!=NULL && sausage->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (beet!=NULL) {
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("candy3_%d.png",index);
-        CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    if (sausageAction) {
-        beet->setDisplayFrame(sausageAction);
-    }
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            beet->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::noBeet)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
-                                                  CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutMaterial::goNext)),
-                                                 
-                                                  NULL));
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("candy3_%d.png",index);
+            CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+        if (sausageAction) {
+            beet->setDisplayFrame(sausageAction);
         }
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                beet->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::noBeet)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
+                                                      CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutMaterial::goNext)),
+                                                     
+                                                      NULL));
+            }
+    }
+
 }
 
 void CutMaterial::potatoAction(int index){
     CCSprite* potato=(CCSprite*)this->getChildByTag(kPotato);
 //    if(sausage!=NULL && sausage->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if(potato!=NULL){
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("halloween1_%d.png",index);
-        CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    if (sausageAction) {
-        potato->setDisplayFrame(sausageAction);
-    }
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            potato->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::noPotato)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
-                                                  CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutMaterial::halloween2)),
-                                                 
-                                                  NULL));
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("halloween1_%d.png",index);
+            CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+        if (sausageAction) {
+            potato->setDisplayFrame(sausageAction);
         }
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                potato->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::noPotato)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
+                                                      CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutMaterial::halloween2)),
+                                                     
+                                                      NULL));
+            }
+    }
+
 }
 
 void CutMaterial::pumpkinAction(int index){
     CCSprite* pumpkin=(CCSprite*)this->getChildByTag(kPumpkin);
 //    if(sausage!=NULL && sausage->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (pumpkin!=NULL) {
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("halloween2_%d.png",index);
-        CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    if (sausageAction) {
-        pumpkin->setDisplayFrame(sausageAction);
-    }
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            pumpkin->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::noPumpkins)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
-                                                  CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutMaterial::goNext)),
-                                                 
-                                                  NULL));
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("halloween2_%d.png",index);
+            CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+        if (sausageAction) {
+            pumpkin->setDisplayFrame(sausageAction);
         }
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                pumpkin->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::noPumpkins)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
+                                                      CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutMaterial::goNext)),
+                                                     
+                                                      NULL));
+            }
+    }
+
 }
 
 void CutMaterial::onionAction(int index){
     CCSprite* onion=(CCSprite*)this->getChildByTag(kOnion);
 //    if(sausage!=NULL && sausage->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (onion!=NULL) {
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("christmas1_%d.png",index);
-        CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    if (sausageAction) {
-        onion->setDisplayFrame(sausageAction);
-    }
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            onion->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::noOnion)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
-                                                  CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutMaterial::christmas2)),
-                                                  NULL));
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("christmas1_%d.png",index);
+            CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+        if (sausageAction) {
+            onion->setDisplayFrame(sausageAction);
         }
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                onion->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::noOnion)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
+                                                      CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutMaterial::christmas2)),
+                                                      NULL));
+            }
+    }
+
 }
 
 void CutMaterial::garlicAction(int index){
     CCSprite* garlic=(CCSprite*)this->getChildByTag(kGarlic);
 //    if(sausage!=NULL && sausage->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (garlic!=NULL) {
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("christmas2_%d.png",index);
-        CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-    if (sausageAction) {
-        garlic->setDisplayFrame(sausageAction);
-    }
-        if (index==3) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            garlic->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::noGarlic)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
-                                                  CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
-                                                  CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutMaterial::goNext)),
-                                                  NULL));
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("christmas2_%d.png",index);
+            CCSpriteFrame*  sausageAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+        if (sausageAction) {
+            garlic->setDisplayFrame(sausageAction);
         }
+            if (index==3) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                garlic->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutMaterial::CannotCut)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::noGarlic)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::setComplate)),
+                                                      CCCallFunc::create(this, callfunc_selector(CutMaterial::resetCutNum)),
+                                                      CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutMaterial::goNext)),
+                                                      NULL));
+            }
+    }
+
 }
 
 
@@ -489,6 +516,8 @@ void CutMaterial::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     
     beginTouchX = beginPoint.x;
     
+    CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
+    
     CCSprite* back = (CCSprite*)this->getChildByTag(kBack);
     if (back!=NULL && back->boundingBox().containsPoint(location) && backClick ==false) {
         backClick = true;
@@ -501,6 +530,11 @@ void CutMaterial::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
         back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(CutMaterial::clickBack))));
 //        }else{
 //        PizzaManager::sharedManager()->cleanAllSprite();
+    }else if (next !=NULL && next->boundingBox().containsPoint(location) && clickNext==false) {
+        clickNext=true;
+        CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+        SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+        next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(CutMaterial::goNext))));
     }
 }
 

@@ -160,6 +160,8 @@ public:
     void otherGame(int _gameIndex);
 
     int coinValue;
+
+
 private:
     void setMathInfo(int _sceneId);//设置match的配置信息
     void setShapePuzzleInfo(int _sceneId);//设置shapepuzzle的配置信息

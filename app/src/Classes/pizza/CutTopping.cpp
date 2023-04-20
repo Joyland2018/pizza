@@ -29,6 +29,7 @@ enum{
     kXiLanHua=8,
     kPotato=9,
     kPengen=11,
+    kNextTag = 199,
 };
 
 CCScene* CutTopping::scene(){
@@ -53,7 +54,7 @@ bool CutTopping::init(){
     if (!CCLayer::init()) {
         return false;
     }
-    
+    clickNext = false;
     backClick = false;
     CCPoint visibleOrigin=CCDirector::sharedDirector()->getVisibleOrigin();
     CCSize visibleSize = CCDirector::sharedDirector()->getVisibleSize();
@@ -83,7 +84,7 @@ bool CutTopping::init(){
     CCSprite* money = CCSprite::create("background/money.png");
     money->setPosition(ccp(visibleOrigin.x+visibleSize.width-100, visibleSize.height-50));
 //    money->setTag(kMoney);
-    this->addChild(money,10);
+//    this->addChild(money,10);
     
     CCString* curscore = CCString::createWithFormat("%d",GameManager::sharedManager()->getCurrentCoin());
     const char* curscores = curscore->getCString();
@@ -91,7 +92,12 @@ bool CutTopping::init(){
     curallscores->setColor(ccWHITE);
 //    curallscores->setTag(100);
     curallscores->setPosition(ccp(visibleOrigin.x+visibleSize.width-70, visibleSize.height-50));
-    this->addChild(curallscores,11);
+//    this->addChild(curallscores,11);
+    
+    CCSprite* next = CCSprite::create("background/next.png");
+    next->setPosition(ccp(rightTop.x-50,rightTop.y-50));
+    next->setTag(kNextTag);
+    this->addChild(next);
     
     if(GameManager::sharedManager()->firstPlayPizza){
         this->schedule(schedule_selector(CutTopping::showFinger),1.5f);
@@ -102,10 +108,6 @@ bool CutTopping::init(){
         this->pepperoniTopping();
     }else if(PizzaManager::sharedManager()->whichPizza == 5){
         this->showBoluo();
-    }
-
-    if (!CCUserDefault::sharedUserDefault()->getBoolForKey("purchased")){
-        GameManager::sharedManager()->showBanner();
     }
 //    this->showTopping();
     return true;
@@ -344,6 +346,7 @@ void CutTopping::tomatoAction(int index){
 //    sausage->setDisplayFrame(spoonAction);
 //    if(potato!=NULL && potato->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
 //        index++;
+    if (potato!=NULL) {
         isMoveComplate=true;
         
         CCString *name = CCString::createWithFormat("tomato%d.png",index);
@@ -362,6 +365,8 @@ void CutTopping::tomatoAction(int index){
                                                  
                                                  NULL));
         }
+    }
+
 //    }
 //        potato->setSpriteFrame();
 //        CCArray* frame = CCArray::create();
@@ -398,6 +403,7 @@ void CutTopping::rouwanAction(int index){
 //    sausage->setDisplayFrame(spoonAction);
 //    if(rouwan!=NULL && rouwan->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
 //        index++;
+    if (rouwan!=NULL) {
         isMoveComplate = true;
 //        cutNum++;
         CCString *name = CCString::createWithFormat("meatball%d.png",index);
@@ -415,6 +421,8 @@ void CutTopping::rouwanAction(int index){
                                                  
                                                   NULL));
         }
+    }
+
         
 //        CCArray* frame = CCArray::create();
 //               for (int m =1; m<5; m++) {
@@ -442,10 +450,7 @@ void CutTopping::rouwanAction(int index){
 
 void CutTopping::peigenAction(int index){
     CCSprite* peigen=(CCSprite*)this->getChildByTag(kPengen);
-//    CCString *name = CCString::createWithFormat("spoon%d.png",sausageIndex);
-//    CCSpriteFrame*  spoonAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-//    sausage->setDisplayFrame(spoonAction);
-//    if(peigen!=NULL && peigen->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (peigen!=NULL) {
         isMoveComplate =true;
 //        index++;
 //        cutNum++;
@@ -464,6 +469,12 @@ void CutTopping::peigenAction(int index){
                                                  
                                                   NULL));
         }
+    }
+//    CCString *name = CCString::createWithFormat("spoon%d.png",sausageIndex);
+//    CCSpriteFrame*  spoonAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+//    sausage->setDisplayFrame(spoonAction);
+//    if(peigen!=NULL && peigen->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+
         
         
 //        CCArray* frame = CCArray::create();
@@ -495,24 +506,27 @@ void CutTopping::lajiaoAction(int index){
 //    CCSpriteFrame*  spoonAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
 //    sausage->setDisplayFrame(spoonAction);
 //    if(lajiao!=NULL && lajiao->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (lajiao!=NULL) {
         isMoveComplate=true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("pepper%d.png",index);
-        CCSpriteFrame*  lajiaoAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-        lajiao->setDisplayFrame(lajiaoAction);
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            lajiao->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
-                                                 CCCallFunc::create(this, callfunc_selector(CutTopping::noPepper)),
-                                                 CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
-                                                 CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
-                                                 CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
-                                                 
-                                                  NULL));
-        }
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("pepper%d.png",index);
+            CCSpriteFrame*  lajiaoAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+            lajiao->setDisplayFrame(lajiaoAction);
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                lajiao->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
+                                                     CCCallFunc::create(this, callfunc_selector(CutTopping::noPepper)),
+                                                     CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
+                                                     CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
+                                                     CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
+                                                     
+                                                      NULL));
+            }
+    }
+
         
         
         
@@ -548,24 +562,27 @@ void CutTopping::moguAction(int index){
 //    CCSpriteFrame*  spoonAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
 //    sausage->setDisplayFrame(spoonAction);
 //    if(mogu!=NULL && mogu->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (mogu!=NULL) {
         isMoveComplate=true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("mushroom%d.png",index);
-        CCSpriteFrame*  moguAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-        mogu->setDisplayFrame(moguAction);
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            mogu->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
-                                               CCCallFunc::create(this, callfunc_selector(CutTopping::noMogu)),
-                                               CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
-                                               CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
-                                               CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
-                                                 
-                                                  NULL));
-        }
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("mushroom%d.png",index);
+            CCSpriteFrame*  moguAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+            mogu->setDisplayFrame(moguAction);
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                mogu->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
+                                                   CCCallFunc::create(this, callfunc_selector(CutTopping::noMogu)),
+                                                   CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
+                                                   CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
+                                                   CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
+                                                     
+                                                      NULL));
+            }
+    }
+ 
 //        CCArray* frame = CCArray::create();
 //               for (int m =1; m<7; m++) {
 //                   CCString *name = CCString::createWithFormat("mushroom%d.png",m);
@@ -595,24 +612,27 @@ void CutTopping::bocaiAction(int index){
 //    CCSpriteFrame*  spoonAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
 //    sausage->setDisplayFrame(spoonAction);
 //    if(bocai!=NULL && bocai->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (bocai!=NULL) {
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("spinach%d.png",index);
-        CCSpriteFrame*  bocaiAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-        bocai->setDisplayFrame(bocaiAction);
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            bocai->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
-                                                CCCallFunc::create(this, callfunc_selector(CutTopping::noBocai)),
-                                                CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
-                                                CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
-                                                CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
-                                                 
-                                                  NULL));
-        }
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("spinach%d.png",index);
+            CCSpriteFrame*  bocaiAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+            bocai->setDisplayFrame(bocaiAction);
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                bocai->runAction(CCSequence::create(CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
+                                                    CCCallFunc::create(this, callfunc_selector(CutTopping::noBocai)),
+                                                    CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
+                                                    CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
+                                                    CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
+                                                     
+                                                      NULL));
+            }
+    }
+ 
         
 //        CCArray* frame = CCArray::create();
 //               for (int m =1; m<7; m++) {
@@ -643,25 +663,28 @@ void CutTopping::xilanhuaAction(int index){
 //    CCSpriteFrame*  spoonAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
 //    sausage->setDisplayFrame(spoonAction);
 //    if(xilanhua!=NULL && xilanhua->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (xilanhua!=NULL) {
         isMoveComplate = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("xilanhua%d.png",index);
-        CCSpriteFrame*  xilanhuaAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-        xilanhua->setDisplayFrame(xilanhuaAction);
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            xilanhua->runAction(CCSequence::create(
-                                                   CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
-                                                   CCCallFunc::create(this, callfunc_selector(CutTopping::noXilanhua)),
-                                                   CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
-                                                   CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
-                                                   CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
-                                                 
-                                                  NULL));
-        }
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("xilanhua%d.png",index);
+            CCSpriteFrame*  xilanhuaAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+            xilanhua->setDisplayFrame(xilanhuaAction);
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                xilanhua->runAction(CCSequence::create(
+                                                       CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
+                                                       CCCallFunc::create(this, callfunc_selector(CutTopping::noXilanhua)),
+                                                       CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
+                                                       CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
+                                                       CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
+                                                     
+                                                      NULL));
+            }
+    }
+  
         
 //        CCArray* frame = CCArray::create();
 //               for (int m =1; m<7; m++) {
@@ -690,6 +713,7 @@ void CutTopping::xilanhuaAction(int index){
 void CutTopping::sausageAction(int index){
     CCSprite* sausage=(CCSprite*)this->getChildByTag(kPepporoni);
 //    if(sausage!=NULL && sausage->boundingBox().containsPoint(newPoint) && canCuttop && !isMoveComplate){
+    if (sausage!=NULL) {
         isMoveComplate = true;
 //        index++;
 //        cutNum++;
@@ -709,6 +733,8 @@ void CutTopping::sausageAction(int index){
                                                   NULL));
         }
     }
+    }
+
         
 //        CCArray* frame = CCArray::create();
 //               for (int m =1; m<6; m++) {
@@ -740,25 +766,28 @@ void CutTopping::boluoAction(int index){
 //    CCSpriteFrame*  spoonAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
 //    sausage->setDisplayFrame(spoonAction);
 //    if(boluo!=NULL && boluo->boundingBox().containsPoint(newPoint)  && canCuttop && !isMoveComplate){
+    if (boluo!=NULL) {
         isMoveComplate  = true;
-//        index++;
-//        cutNum++;
-        CCString *name = CCString::createWithFormat("pineapple%d.png",index);
-        CCSpriteFrame*  boluoAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
-        boluo->setDisplayFrame(boluoAction);
-        if (index==4) {
-//            isMoveComplate=true;
-//            cutNum=1;
-            boluo->runAction(CCSequence::create(
-                                                CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
-                                                CCCallFunc::create(this, callfunc_selector(CutTopping::noBoluo)),
-                                                CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
-                                                CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
-                                                CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
-                                                 CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
-                                                
-                                                  NULL));
-        }
+    //        index++;
+    //        cutNum++;
+            CCString *name = CCString::createWithFormat("pineapple%d.png",index);
+            CCSpriteFrame*  boluoAction= CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name->getCString());
+            boluo->setDisplayFrame(boluoAction);
+            if (index==4) {
+    //            isMoveComplate=true;
+    //            cutNum=1;
+                boluo->runAction(CCSequence::create(
+                                                    CCCallFunc::create(this, callfunc_selector(CutTopping::CannotCut)),
+                                                    CCCallFunc::create(this, callfunc_selector(CutTopping::noBoluo)),
+                                                    CCCallFunc::create(this, callfunc_selector(CutTopping::setComplate)),
+                                                    CCCallFunc::create(this, callfunc_selector(CutTopping::resetCutNum)),
+                                                    CCEaseOut::create(CCMoveTo::create(1.0, ccp(center.x-1000, center.y)), 0.2f),
+                                                     CCCallFunc::create(this, callfunc_selector(CutTopping::showTopping)),
+                                                    
+                                                      NULL));
+            }
+    }
+  
         
 //        CCArray* frame = CCArray::create();
 //               for (int m =1; m<7; m++) {
@@ -804,6 +833,8 @@ void CutTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
     beginTouchX = beginPoint.x;
     
     CCSprite* back = (CCSprite*)this->getChildByTag(kBack);
+    CCSprite* next = (CCSprite*)this->getChildByTag(kNextTag);
+    
     if (back!=NULL && back->boundingBox().containsPoint(location) && backClick==false) {
         backClick = true;
 //        SimpleAudioEngine::sharedEngine()->playEffect("mp3/done.mp3");
@@ -813,6 +844,11 @@ void CutTopping::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent){
         SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
         back->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(CutTopping::clickBack))));
         PizzaManager::sharedManager()->cleanAllSprite();
+    }else if (next !=NULL && next->boundingBox().containsPoint(location) && clickNext==false) {
+        clickNext = true;
+        CCScaleBy* scaleBy = CCScaleBy::create(0.1, 1.2);
+        SimpleAudioEngine::sharedEngine()->playEffect("mp3/touchItem.mp3");
+        next->runAction(CCSequence::createWithTwoActions(CCSequence::createWithTwoActions(scaleBy, scaleBy->reverse()), CCCallFunc::create(this, callfunc_selector(CutTopping::goNext))));
     }
 }
 

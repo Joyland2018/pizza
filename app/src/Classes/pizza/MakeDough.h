@@ -138,6 +138,8 @@ public:
     bool cannotStir = false;
     bool clickBack;
     
+    bool clickNext;
+    
     void clickToBack();
     CREATE_FUNC(MakeDough);
 };

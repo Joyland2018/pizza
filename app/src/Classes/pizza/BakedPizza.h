@@ -73,6 +73,8 @@ public:
     
     bool backClick;
     
+    bool clickNext;
+    
     void clickBack();
     CREATE_FUNC(BakedPizza);
 };

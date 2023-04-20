@@ -40,8 +40,17 @@ GAMEMANAGER_INF gameManagerInf = {0};
 GameManager* GameManager::sharedManager()
 {
     if (!gm) {
+
+        //xiao
+
+        //gm = new GameManager() ;
+        //gm->coinValue = 0;
         gm = new GameManager() ;
         gm->coinValue = 0;
+        gm->isiphoneX = false ;
+        gm->isFullAndroidPad = false;
+        gm->lastTime = 0;
+        gm->iapDisplayCount = 0;
     }
     
     
