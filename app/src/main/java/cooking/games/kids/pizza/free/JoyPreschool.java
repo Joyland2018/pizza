@@ -66,7 +66,7 @@ import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 //import com.google.android.gms.ads.rewarded.RewardedAdCallback;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
+//import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import com.android.billingclient.api.PurchasesResponseListener;
 
@@ -172,7 +172,7 @@ public class JoyPreschool extends Cocos2dxActivity implements PurchasesUpdatedLi
 //    public SkuDetails noAdsSkuDetails2;      //非消耗型产品ID-2
 //    public SkuDetails scripSkuDetails1;      //订阅产品ID-1
 //    public SkuDetails scripSkuDetails2;      //订阅产品ID-2
-    public MixpanelAPI mixpanelInstance;    //埋点工具
+//    public MixpanelAPI mixpanelInstance;    //埋点工具
 //    public int mBuyIndex;       //0为NoAds,1为Prime;
 //	public static String FATE_OBB_PATH = "";
 	
@@ -371,7 +371,7 @@ public class JoyPreschool extends Cocos2dxActivity implements PurchasesUpdatedLi
     public void connectMixpanel(){
         String mixpanelToken = "f58314fb5fa470902ccc7151a8495d40";
 
-        mixpanelInstance = MixpanelAPI.getInstance(joylandInstance,mixpanelToken);
+        //mixpanelInstance = MixpanelAPI.getInstance(joylandInstance,mixpanelToken);
     }
 
     //埋点

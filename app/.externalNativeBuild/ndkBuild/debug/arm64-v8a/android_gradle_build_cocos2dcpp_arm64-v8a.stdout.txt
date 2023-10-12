@@ -1,4 +1,0 @@
-Android NDK: WARNING: Ignoring unknown import directory: /Users/lixiaofei/AndroidStudioProjects/JoyLand/app/src/main/jni/cocos2dx/platform/third_party/android/prebuilt    
-Android NDK: WARNING: Deprecated NDK_TOOLCHAIN_VERSION value: 4.9. GCC is no longer supported and will be removed in the next release. See https://android.googlesource.com/platform/ndk/+/master/docs/ClangMigration.md.    
-Android NDK: WARNING:/Users/lixiaofei/AndroidStudioProjects/pizza/app/src/main/jni/cocos2dx/Android.mk:cocos2dx_static: LOCAL_LDLIBS is always ignored for static libraries    
-make: `/Users/lixiaofei/AndroidStudioProjects/pizza/app/build/intermediates/ndkBuild/debug/obj/local/arm64-v8a/libcocos2dcpp.so' is up to date.
